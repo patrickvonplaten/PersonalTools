@@ -4,6 +4,7 @@ import sys
 import argparse
 from returnnTfNetworkLayerPlotter import ReturnnLayerPlotter
 import shutil
+import ipdb
 
 if __name__ == "__main__":
     configFilePathRelativ =  '/config/amTraining.config'
@@ -18,8 +19,8 @@ if __name__ == "__main__":
     """)
 
     parser.add_argument('--dir', help='Step directory where returnn network files are stored', required=True)
-    parser.add_argument('--layer', help='Name of layer as defined in returnn config file that is to be plotted', required=True)
-    parser.add_argument('--title', help='Title for all plots, that should be specified by the user', required=True)
+    parser.add_argument('--layer', help='Name of layer as defined in returnn config file that is to be plotted')
+    parser.add_argument('--title', help='Title for all plots, that should be specified by the user', default='plot')
     parser.add_argument('--type', help="""
     Decide which plotting type is wanted. Make a list by choesing of '1Do','1Dd','2Dh',3Dh' with 
     '1Do' = weights, time plotting of last epoch for all filters on one plot
@@ -28,15 +29,18 @@ if __name__ == "__main__":
     '3D' = for 2D filters only. filter's first dimension, weights plotting with values shown in heat mapping over multiple plots for all filter's second dimension.
     Default is 'all' meaning that all possible plots for this layer are plotted. 
     """, default='1Do,1Dd,2Dh,3Dh')
-    parser.add_argument('--c',help='define colors used for matplotlib colors. Make sure that num of colors is equal to samplesPerRow', default='c,b,r,g')
+    parser.add_argument('--c',help='define colors used for matplotlib colors for 1D plots. Make sure that num of colors is equal to samplesPerRow', default='c,b,r,g')
+    parser.add_argument('--cmap',help='define colormap theme used for 2D Heat Map for conv layers.' , default='hot')
     parser.add_argument('--spr',help='samples to be plotted per row in plot',default=4)
     parser.add_argument('--spc',help='samples to be plotted per column. Make sure that samples per row * samples per column is equal to #filtres', default=16)
     parser.add_argument('--figS',help='figure size of plot as tuple',default=(22,27))
-    parser.add_argument('--r',help='epoch range over which weights should be plotted. In case in detail plots should be plotted, this arguments needs to be set! Default is First and last',default='1,numEpochs')
+    parser.add_argument('--r',help='epoch range over which weights should be plotted. In case in detail plots should be plotted, this arguments needs to be set! Default is last',default='numEpochs')
     parser.add_argument('--pt',help='parameter type for which to save the model weigths. Choose between weights "W" and bias "b"',default='W')
     parser.add_argument('-rf', action='store_true', default=False, help='If "-rf" is added then weight directory will be deleted and recreated') 
+    parser.add_argument('-log', action='store_true', default=False, help='If "-log" is added then plots of conv layer will be plotted in log scale') 
     parser.add_argument('-a', action='store_true', default=False, help='If "-a" is added then the network structure will be loaded and shown') 
     parser.add_argument('--d',help='domains that should be plotted: "time" and/or "freq"',default='time,freq')
+    parser.add_argument('--init',help='if layer is initialized with previously trained network, give the path of the needed network file. Layer names of previously trained network used for init and network to be analysed have to match', default=None)
 
     args = vars(parser.parse_args())
 
@@ -59,31 +63,43 @@ if __name__ == "__main__":
         'typeOfPlotting': [ plottingsFullName[x] for x in args['type']],
         'colors': args['c'],
         'samplesPerColumn': args['spc'],
-        'title': args['title']
+        'title': args['title'],
+        'cmap': args['cmap'],
+        'log': args['log']
     }
 
-    layerName = args['layer']
-    parameterTypeToSave = args['pt']
     pathToStepDir = args['dir']
-    pathToAnalysisDir = pathToStepDir + '/analysis_' + layerName + '_layer'
-    pathToSaveWeightsDir = pathToAnalysisDir + '/weights_' + layerName + '_layer'
     modelDir = pathToStepDir + modelDirRelativ
-    configFilePath = pathToStepDir + configFilePathRelativ
-
-    doSaveWeights = args['rf']
     doShowArchitecture = args['a']
-    doWeightExist = os.path.exists(pathToSaveWeightsDir)
-    doAnalysisDirExist = os.path.exists(pathToAnalysisDir)
-
-    if not doAnalysisDirExist:
-        os.makedirs(pathToAnalysisDir)
 
     if(doShowArchitecture):
         from tensorflow.contrib.framework.python.framework import checkpoint_utils
         variables = checkpoint_utils.list_variables(modelDir + '/network.001') 
         print(variables)
-        with open(os.path.join(pathToAnalysisDir, 'architecture.txt'), "w") as text_file:
+        with open(os.path.join(pathToStepDir , 'architecture.txt'), "w") as text_file:
             text_file.write('\n'.join('%s %s' % x for x in variables)) 
+        sys.exit()
+    
+
+    initWeightForLayerPath = args['init']
+    layerNameForInitWeight = None
+    layerName = args['layer']
+    pathLayerName = layerName.replace('/','_')
+    parameterTypeToSave = args['pt']
+    pathToAnalysisDir = pathToStepDir + '/analysis_' + pathLayerName + '_layer'
+    pathToSaveWeightsDir = pathToAnalysisDir + '/weights_' + pathLayerName + '_layer'
+    configFilePath = pathToStepDir + configFilePathRelativ
+
+    doSaveWeights = args['rf']
+    doWeightExist = os.path.exists(pathToSaveWeightsDir)
+    doAnalysisDirExist = os.path.exists(pathToAnalysisDir)
+
+    if initWeightForLayerPath:
+        plottingConfigs['plotRange'].insert(0, 0)
+        layerNameForInitWeight = '/'.join(layerName.split('/')[1:])
+
+    if not doAnalysisDirExist:
+        os.makedirs(pathToAnalysisDir)
 
     if doWeightExist and doSaveWeights:
         shutil.rmtree(pathToSaveWeightsDir)
@@ -93,7 +109,7 @@ if __name__ == "__main__":
 
     if(doSaveWeights or not doWeightExist):
         from returnnTfNetworkLayerSaver import LayerWeightSaver
-        lws = LayerWeightSaver(modelDir, pathToSaveWeightsDir, layerName, parameterTypeToSave)
+        lws = LayerWeightSaver(modelDir, pathToSaveWeightsDir, layerName, parameterTypeToSave, initWeightForLayerPath, layerNameForInitWeight)
         numEpochs = lws.numEpochs
     else:
         print("Weights already exist. If you want to delete old weights and save new weights, add '-rf' to the command.")
