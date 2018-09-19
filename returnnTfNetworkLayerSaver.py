@@ -7,22 +7,21 @@ import ipdb
 
 class LayerWeightSaver(object):
 
-    def __init__(self, modelDir, saveWeightsPath, nameOfLayer, parameterTypeToSave, initWeightForLayerPath=None, layerNameForInitWeight=None):
+    def __init__(self, modelDir, saveWeightsPath, nameOfLayer, initWeightForLayerPath=None, layerNameForInitWeight=None):
         self.modelDir = modelDir
         self.saveWeightsPath = saveWeightsPath
-        self.layerNameOfWeightsToSave = nameOfLayer + '/' + parameterTypeToSave
+        self.layerNameOfWeightsToSave = nameOfLayer
         self.nameOfLayerPath = nameOfLayer.replace('/','_')
         self.numEpochs = None
         self.initWeightForLayerPath = initWeightForLayerPath
         if(self.initWeightForLayerPath):
-            self.layerNameOfInitWeightsToSave = layerNameForInitWeight + '/' + parameterTypeToSave
+            self.layerNameOfInitWeightsToSave = layerNameForInitWeight 
         self.saveWeights()
 
     def saveWeights(self):
         modelNames = sorted(['.'.join(x.split('.',2)[:2]) for x in os.listdir(self.modelDir) if '.data-' in x])
 
         self.numEpochs = len(modelNames)
-        
         if(self.initWeightForLayerPath):
             self.saveWeight('network.000', self.initWeightForLayerPath, self.layerNameOfInitWeightsToSave)        
 
