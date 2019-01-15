@@ -32,7 +32,7 @@ if __name__ == "__main__":
     parser.add_argument('--cmap',help='define colormap theme used for 2D Heat Map for conv layers.' , default='hot')
     parser.add_argument('--spr',help='samples to be plotted per row in plot',default=4)
     parser.add_argument('--spc',help='samples to be plotted per column. Make sure that samples per row * samples per column is equal to #filtres', default=16)
-    parser.add_argument('--figS',help='figure size of plot as tuple',default=(10,27))
+    parser.add_argument('--figS',help='figure size of plot as tuple',default=(27,10))
     parser.add_argument('--r',help='epoch range over which weights should be plotted. In case in detail plots should be plotted, this arguments needs to be set! Default is last',default='numEpochs')
     parser.add_argument('-rf', action='store_true', default=False, help='If "-rf" is added then weight directory will be deleted and recreated') 
     parser.add_argument('-log', action='store_true', default=False, help='If "-log" is added then plots of conv layer will be plotted in log scale') 
