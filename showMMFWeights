@@ -4,14 +4,20 @@ import pyhtk
 import ipdb
 
 MMFFilePath=sys.argv[1]
-hmmSet = pyhtk.HTKModelReader(MMFFilePath, '').getHiddenMarkovModelSet()
 
-def getWeights(layerName):
+def getWeights(layerName, hmmSet):
     return hmmSet.getNMatrixTable()[layerName].getValuesAsNumPyArray()
 
-layerName = 'CNNLayer1_kernels'
-print(hmmSet.getNMatrixTable().keys())
-layerArray = getWeights(layerName)
-ipdb.set_trace()
-print('finish')
+def print_layer_Values(MMFFilePath, layerName):
+    hmmSet = pyhtk.HTKModelReader(MMFFilePath, '').getHiddenMarkovModelSet()
+    layerArray = getWeights(layerName, hmmSet)
+    print('layerArray[0][:20]: {}'.format(layerArray[0][:20]))
+
+def print_CNNLayer1_kernels():
+    layerName = 'CNNLayer1_kernels'
+    print_layer_Values(MMFFilePath, layerName) 
+
+for MMFFilePath in sys.argv[1:]:
+    print('Print values for MMFFilePath: {}'.format(MMFFilePath))
+    print_CNNLayer1_kernels()
 
