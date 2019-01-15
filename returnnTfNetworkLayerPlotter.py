@@ -292,10 +292,10 @@ class Plotter(object):
         
         fig, axs = plt.subplots(self.layer.dimInput, len(self.epochRangeToPlotPerColumn), figsize=self.figSize, sharex=True, sharey=True)
 
-        if(self.layer.dimInput == 1):
-            axs = [axs]
-        elif(not isinstance(axs, np.ndarray)):
+        if(self.layer.dimInput == 1 and not isinstance(axs, np.ndarray)):
             axs = [[axs]]
+        elif(sel.layer.dimInput == 1):
+            axs = [axs]
         elif(len(axs.shape) < 2):
             axs = [[ax] for ax in axs]
 
