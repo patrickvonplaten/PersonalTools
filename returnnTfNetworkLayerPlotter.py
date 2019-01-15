@@ -24,23 +24,23 @@ class ReturnnLayerPlotter(object):
     def loadWeights(self):
         weights = []
         for i in self.epochRangeToPlotPerColumn:
-            epochWeight = np.load(os.path.join(self.pathToWeights, self.nameOfLayerPath + '_network.' + "%03d" %             (i,) + '.npy'))
+            epochWeight = np.load(os.path.join(self.pathToWeights, self.nameOfLayerPath + '_epoch' + str(i) + '_MMF.npy'))
             weights.append(np.squeeze(epochWeight))
         return weights
 
     def getLayer(self):
         lenWeightsTensor = len(self.weights[0].shape)
+        isLayerWeightComposedOf1Subarrays = lenWeightsTensor == 1
         isLayerWeightComposedOf2Subarrays = lenWeightsTensor == 2
-        isLayerWeightComposedOf3Subarrays = lenWeightsTensor == 3 
-        isLayerWeightComposedOf4Subarrays = lenWeightsTensor == 4
+        isLayerWeightComposedOf3Subarrays = lenWeightsTensor == 3
         wishedPlottings = self.plottingConfigs['typeOfPlotting']
         isPlottingDomainLog = self.plottingConfigs['log']
 
-        if(isLayerWeightComposedOf2Subarrays):
+        if(isLayerWeightComposedOf1Subarrays):
             return FeedForwardLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings) 
-        elif(isLayerWeightComposedOf3Subarrays):
+        elif(isLayerWeightComposedOf2Subarrays):
             return Conv1DLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog) 
-        elif(isLayerWeightComposedOf4Subarrays):
+        elif(isLayerWeightComposedOf3Subarrays):
             return Conv2DLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings) 
 
     def run(self):
@@ -118,17 +118,14 @@ class Conv1DLayer(Layer):
         super(Conv1DLayer, self).__init__(weights, name, namePath)
         self.timeFreqRatio = 2
         self.isPlottingDomainLog = isPlottingDomainLog
-        self.filterSize = self.shape[0]
-        self.numFilters = self.shape[-1]
-        self.dimInput = self.shape[1]
-        self.weightsReshaped = [np.moveaxis(x,0, -1) for x in self.weights] 
-        assert self.weightsReshaped[0].shape[0] == self.dimInput, "dim not correct"
-        assert self.weightsReshaped[0].shape[1] == self.numFilters, "dim not correct"
-        assert self.weightsReshaped[0].shape[2] == self.filterSize, "dim not correct"
+        self.filterSize = self.shape[1]
+        self.numFilters = self.shape[0]
+        assert weights[0].shape[0] == self.numFilters, "dim not correct"
+        assert weights[0].shape[1] == self.filterSize, "dim not correct"
         self.plotableWeightsTime = []
     
         for i in range(self.dimInput):
-            self.plotableWeightsTime.append([x[i] for x in self.weightsReshaped])
+            self.plotableWeightsTime.append([x for x in weights])
             
         self.permutation = None 
         self.plotableWeightsFreq, self.plotableWeightsFreqSorted = self.getFrequencyDomain()
@@ -295,7 +292,9 @@ class Plotter(object):
         
         fig, axs = plt.subplots(self.layer.dimInput, len(self.epochRangeToPlotPerColumn), figsize=self.figSize, sharex=True, sharey=True)
 
-        if(not isinstance(axs, np.ndarray)):
+        if(self.layer.dimInput == 1):
+            axs = [axs]
+        elif(not isinstance(axs, np.ndarray)):
             axs = [[axs]]
         elif(len(axs.shape) < 2):
             axs = [[ax] for ax in axs]
@@ -305,7 +304,7 @@ class Plotter(object):
             mode = 'sorted_by_channel_' + str(self.layer.channelUsedForPermutation)
         elif(mode == 'unsorted'):
             plotableWeights = self.layer.getPlotable2DWeights()
-        
+
         for epochRangeIdx, plotableWeight in enumerate(plotableWeights):
             for dimInputIdx, plotableWeightPerDim in enumerate(plotableWeight): 
                 im = axs[dimInputIdx][epochRangeIdx].imshow(plotableWeightPerDim, origin='lower', aspect='auto', cmap=self.plottingConfigs['cmap'])
@@ -316,12 +315,12 @@ class Plotter(object):
         fig.subplots_adjust(right=0.8)
         plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
 
-	cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
-	fig.colorbar(im, cax=cbar_ax)
+        cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+        fig.colorbar(im, cax=cbar_ax)
         
         numDomain = '_log_applied' if(self.layer.isPlottingDomainLog and self.layer.domain == 'freq') else ''
         plt.suptitle(self.title + '_' + self.layer.domain + '_for_epoch_' + '_'.join(str(x) for x in self.epochRangeToPlotPerColumn) + numDomain, fontsize=self.titleFontSize, y=self.titleYPosition)
-	plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_heat_map_' + self.layer.domain + '_' + mode + numDomain)
+        plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_heat_map_' + self.layer.domain + '_' + mode + numDomain)
         
     def plot3DHeatWeights(self):
         plotableWeights = self.layer.getPlotable3DWeights

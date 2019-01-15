@@ -1,0 +1,75 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+Conv1DLayer	returnnTfNetworkLayerPlotter.py	/^class Conv1DLayer(Layer):$/;"	c
+Conv2DLayer	returnnTfNetworkLayerPlotter.py	/^class Conv2DLayer(Layer):$/;"	c
+FeedForwardLayer	returnnTfNetworkLayerPlotter.py	/^class FeedForwardLayer(Layer):$/;"	c
+Layer	returnnTfNetworkLayerPlotter.py	/^class Layer(object):$/;"	c
+LayerWeightSaver	returnnTfNetworkLayerSaver.py	/^class LayerWeightSaver(object):$/;"	c
+Plotter	returnnTfNetworkLayerPlotter.py	/^class Plotter(object):$/;"	c
+ReturnnLayerPlotter	returnnTfNetworkLayerPlotter.py	/^class ReturnnLayerPlotter(object):$/;"	c
+__init__	returnnTfNetworkLayerPlotter.py	/^    def __init__(self, pathToAnalysisDir, plottingConfigs, layer, epochRangeToPlotPerColumn):$/;"	m	class:Plotter
+__init__	returnnTfNetworkLayerPlotter.py	/^    def __init__(self, weights, name, namePath):$/;"	m	class:Layer
+__init__	returnnTfNetworkLayerPlotter.py	/^    def __init__(self, weights, name, namePath, wishedPlottings):$/;"	m	class:Conv2DLayer
+__init__	returnnTfNetworkLayerPlotter.py	/^    def __init__(self, weights, name, namePath, wishedPlottings):$/;"	m	class:FeedForwardLayer
+__init__	returnnTfNetworkLayerPlotter.py	/^    def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog):$/;"	m	class:Conv1DLayer
+__init__	returnnTfNetworkLayerPlotter.py	/^    def __init__(self,pathToAnalysisDir, pathToWeights, nameOfLayer, plottingConfigs, numEpochs):$/;"	m	class:ReturnnLayerPlotter
+__init__	returnnTfNetworkLayerSaver.py	/^    def __init__(self, modelDir, saveWeightsPath, nameOfLayer, initWeightForLayerPath=None, layerNameForInitWeight=None):$/;"	m	class:LayerWeightSaver
+addToAllowedPlottings	returnnTfNetworkLayerPlotter.py	/^    def addToAllowedPlottings(self, plottings):$/;"	m	class:Layer
+batchSize	compareReturnnConvFunctionsWithPaper.py	/^batchSize = 1$/;"	v
+channels	compareReturnnConvFunctionsWithPaper.py	/^channels = 6 $/;"	v
+configFile	returnnTfNetworkLayerChecker.py	/^configFile = sys.argv[1]$/;"	v
+createPlottingsToDo	returnnTfNetworkLayerPlotter.py	/^    def createPlottingsToDo(self, wishedPlottings):$/;"	m	class:Layer
+f	compareReturnnConvFunctionsWithPaper.py	/^f = tf.constant(f_val, name="f", dtype=tf.float32)$/;"	v
+f_shape	compareReturnnConvFunctionsWithPaper.py	/^f_shape = [filterSize, channels, 1, numFilter]$/;"	v
+f_val	compareReturnnConvFunctionsWithPaper.py	/^f_val = np.random.random_sample(f_shape).astype(np.float32)$/;"	v
+filterSize	compareReturnnConvFunctionsWithPaper.py	/^filterSize = 4$/;"	v
+firstMethod	checkDim.py	/^def firstMethod(numInputs, numOutputs):$/;"	f
+fourierTransform	returnnTfNetworkLayerPlotter.py	/^    def fourierTransform(self, plotableWeightsTimeSingleDim, sortFn):$/;"	m	class:Conv1DLayer
+getFrequencyDomain	returnnTfNetworkLayerPlotter.py	/^    def getFrequencyDomain(self):$/;"	m	class:Conv1DLayer
+getLayer	returnnTfNetworkLayerPlotter.py	/^    def getLayer(self):$/;"	m	class:ReturnnLayerPlotter
+getPlotable1DWeights	returnnTfNetworkLayerPlotter.py	/^    def getPlotable1DWeights(self):$/;"	m	class:Conv1DLayer
+getPlotable1DWeights	returnnTfNetworkLayerPlotter.py	/^    def getPlotable1DWeights(self):$/;"	m	class:FeedForwardLayer
+getPlotable1DWeights	returnnTfNetworkLayerPlotter.py	/^    def getPlotable1DWeights(self):$/;"	m	class:Layer
+getPlotable2DWeights	returnnTfNetworkLayerPlotter.py	/^    def getPlotable2DWeights(self):$/;"	m	class:Conv1DLayer
+getPlotable2DWeights	returnnTfNetworkLayerPlotter.py	/^    def getPlotable2DWeights(self):$/;"	m	class:FeedForwardLayer
+getPlotable2DWeights	returnnTfNetworkLayerPlotter.py	/^    def getPlotable2DWeights(self):$/;"	m	class:Layer
+getPlotable3DWeights	returnnTfNetworkLayerPlotter.py	/^    def getPlotable3DWeights(self):$/;"	m	class:Conv2DLayer
+getPlotable3DWeights	returnnTfNetworkLayerPlotter.py	/^    def getPlotable3DWeights(self):$/;"	m	class:Layer
+getPlotableSorted2DWeights	returnnTfNetworkLayerPlotter.py	/^    def getPlotableSorted2DWeights(self):$/;"	m	class:Conv1DLayer
+loadWeights	returnnTfNetworkLayerPlotter.py	/^    def loadWeights(self):$/;"	m	class:ReturnnLayerPlotter
+modelFile	returnnTfNetworkLayerChecker.py	/^modelFile = sys.argv[2]$/;"	v
+noSortFreq	returnnTfNetworkLayerPlotter.py	/^    def noSortFreq(self, x):$/;"	m	class:Conv1DLayer
+numFilter	compareReturnnConvFunctionsWithPaper.py	/^numFilter = 1$/;"	v
+output	compareReturnnConvFunctionsWithPaper.py	/^output = tf.nn.convolution(input=x, filter=f, padding="VALID")$/;"	v
+plot	returnnTfNetworkLayerPlotter.py	/^    def plot(self):$/;"	m	class:Plotter
+plot1DSimpleWeightsAll	returnnTfNetworkLayerPlotter.py	/^    def plot1DSimpleWeightsAll(self):$/;"	m	class:Plotter
+plot1DSimpleWeightsDetail	returnnTfNetworkLayerPlotter.py	/^    def plot1DSimpleWeightsDetail(self):$/;"	m	class:Plotter
+plot2DHeatWeights	returnnTfNetworkLayerPlotter.py	/^    def plot2DHeatWeights(self, mode):$/;"	m	class:Plotter
+plot3DHeatWeights	returnnTfNetworkLayerPlotter.py	/^    def plot3DHeatWeights(self):$/;"	m	class:Plotter
+poolingAdd1	checkDim.py	/^poolingAdd1 = float(sys.argv[2])$/;"	v
+run	returnnTfNetworkLayerPlotter.py	/^    def run(self):$/;"	m	class:ReturnnLayerPlotter
+runBoth	checkDim.py	/^def runBoth(numInputs, numOutputs):$/;"	f
+saveWeight	returnnTfNetworkLayerSaver.py	/^    def saveWeight(self, modelName, modelPath, layerNameOfWeightsToSave):$/;"	m	class:LayerWeightSaver
+saveWeights	returnnTfNetworkLayerSaver.py	/^    def saveWeights(self):$/;"	m	class:LayerWeightSaver
+secondMethod	checkDim.py	/^def secondMethod(numInputs, numOutputs): $/;"	f
+sess	returnnTfNetworkLayerChecker.py	/^sess = tf.Session()$/;"	v
+setDimInputIdx	returnnTfNetworkLayerPlotter.py	/^    def setDimInputIdx(self, idx):$/;"	m	class:Layer
+setDomain	returnnTfNetworkLayerPlotter.py	/^    def setDomain(self, domain):$/;"	m	class:Layer
+setLayerType	returnnTfNetworkLayerPlotter.py	/^    def setLayerType(self, layerType):$/;"	m	class:Layer
+sortFreq	returnnTfNetworkLayerPlotter.py	/^    def sortFreq(self, x):$/;"	m	class:Conv1DLayer
+stride	checkDim.py	/^stride = float(sys.argv[1])$/;"	v
+tfNetwork	returnnTfNetworkLayerChecker.py	/^tfNetwork = ReturnnTfNetworkWrapper(configFile, modelFile, sess).getTFNetwork()$/;"	v
+timeInstances	compareReturnnConvFunctionsWithPaper.py	/^timeInstances = 20$/;"	v
+transformToHeatPlotableWeights	returnnTfNetworkLayerPlotter.py	/^    def transformToHeatPlotableWeights(self, listOfWeights, filterSizeRatio):$/;"	m	class:Conv1DLayer
+transformWeightsToFrequencyDomain	returnnTfNetworkLayerPlotter.py	/^    def transformWeightsToFrequencyDomain(self):$/;"	m	class:Layer
+x	compareReturnnConvFunctionsWithPaper.py	/^x = tf.constant(x_val, name="x", dtype=tf.float32)$/;"	v
+x_shape	compareReturnnConvFunctionsWithPaper.py	/^x_shape = [batchSize, timeInstances, channels, 1]  $/;"	v
+x_val	compareReturnnConvFunctionsWithPaper.py	/^x_val = np.random.random_sample(x_shape).astype(np.float32)$/;"	v
+y	compareReturnnConvFunctionsWithPaper.py	/^    y = sess.run(output)$/;"	v
+y	compareReturnnConvFunctionsWithPaper.py	/^y = y.reshape(17)$/;"	v
+yCompare	compareReturnnConvFunctionsWithPaper.py	/^yCompare = np.sum(yTest, axis=0)$/;"	v
+yTest	compareReturnnConvFunctionsWithPaper.py	/^yTest = np.zeros((channels, timeInstances - filterSize + 1), dtype=np.float32) $/;"	v

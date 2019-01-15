@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 import os 
 import sys
 import argparse
@@ -8,19 +8,17 @@ import subprocess
 import ipdb
 
 if __name__ == "__main__":
-    configFilePathRelativ =  '/config/amTraining.config'
-    modelDirRelativ =  '/outputs/model'
-
     parser = argparse.ArgumentParser(description="""
     Command line tool to plot trained weights given back by returnn.
     Type and other configuration of plot for some layer  can be specified.
     Make sure to run the script in a folder that contains both the configuration file 
-    of returnn and the saved model networks. The variables "modelDirRelativ" and "configPathRelativ" 
-    should be defined accordingly.
+    of returnn and the saved model networks.  
+    should be defined accordingl
     """)
 
     parser.add_argument('--dir', help='Step directory where returnn network files are stored. If nothing is provided, the current directory will be used as the step directory', default=None)
-    parser.add_argument('--layer', help='Name of layer as defined in returnn config file that is to be plotted,f.e.: "feature_subnetwork/fConv/W"')
+    parser.add_argument('--layer', help='Name of layer as defined in returnn config file that is to be plotted,f.e.: "CNNLayer1_kernels"', default='CNNLayer1_kernels')
+    parser.add_argument('--hmm', help='relativ path to hmm folder which contains the weights to be plotted', default='hmm0')
     parser.add_argument('--title', help='Title for all plots, that should be specified by the user', default='plot')
     parser.add_argument('--type', help="""
     Decide which plotting type is wanted. Make a list by choesing of '1Do','1Dd','2Dh',3Dh' with 
@@ -71,22 +69,13 @@ if __name__ == "__main__":
     bashCommand = "pwd"
     process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
     output, error = process.communicate()
-    pathToStepDir = output[:-1]
+    pathToStepDir = output[:-1].decode('utf-8')
+    modelDirRelativ = args['hmm']
 
     if(not not args['dir']):
         pathToStepDir = args['dir']
         
-    modelDir = pathToStepDir + modelDirRelativ
-
-    doShowArchitecture = args['a']
-    if(doShowArchitecture):
-        from tensorflow.contrib.framework.python.framework import checkpoint_utils
-        variables = checkpoint_utils.list_variables(modelDir + '/network.001') 
-        print(variables)
-        with open(os.path.join(pathToStepDir , 'architecture.txt'), "w") as text_file:
-            text_file.write('\n'.join('%s %s' % x for x in variables)) 
-        sys.exit()
-    
+    modelDir = os.path.join(pathToStepDir,modelDirRelativ)
 
     initWeightForLayerPath = args['init']
     layerNameForInitWeight = None
@@ -94,7 +83,6 @@ if __name__ == "__main__":
     pathLayerName = layerName.replace('/','_')
     pathToAnalysisDir = pathToStepDir + '/analysis_' + pathLayerName + '_layer'
     pathToSaveWeightsDir = pathToAnalysisDir + '/weights_' + pathLayerName + '_layer'
-    configFilePath = pathToStepDir + configFilePathRelativ
 
     doSaveWeights = args['rf']
     doWeightExist = os.path.exists(pathToSaveWeightsDir)
@@ -119,7 +107,7 @@ if __name__ == "__main__":
         numEpochs = lws.numEpochs
     else:
         print("Weights already exist. If you want to delete old weights and save new weights, add '-rf' to the command.")
-        numEpochs = len(['.'.join(x.split('.',2)[:2]) for x in os.listdir(modelDir) if '.data-' in x])
+        numEpochs = len([x for x in os.listdir(modelDir) if 'epoch' in x])
 
     layerPlotter = ReturnnLayerPlotter(pathToAnalysisDir, pathToSaveWeightsDir, layerName, plottingConfigs, numEpochs)
     layerPlotter.run()

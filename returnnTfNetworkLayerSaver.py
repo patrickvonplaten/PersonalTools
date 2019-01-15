@@ -1,9 +1,9 @@
 #!/usr/bin/env python3 
 
-from tensorflow.contrib.framework.python.framework import checkpoint_utils
 import numpy as np
 import os, os.path
 import ipdb 
+import pyhtk
 
 class LayerWeightSaver(object):
 
@@ -19,18 +19,15 @@ class LayerWeightSaver(object):
         self.saveWeights()
 
     def saveWeights(self):
-        modelNames = sorted(['.'.join(x.split('.',2)[:2]) for x in os.listdir(self.modelDir) if '.data-' in x])
-
+        modelNames = [ x + '/MMF' for x in os.listdir(self.modelDir) if 'epoch' in x ]
         self.numEpochs = len(modelNames)
-        if(self.initWeightForLayerPath):
-            self.saveWeight('network.000', self.initWeightForLayerPath, self.layerNameOfInitWeightsToSave)        
-
         for modelName in modelNames:
-            self.saveWeight(modelName, self.modelDir + '/' + modelName, self.layerNameOfWeightsToSave)
+            self.saveWeight('_'.join(modelName.split('/')), self.modelDir + '/' + modelName, self.layerNameOfWeightsToSave)
         
         print('...saving weights of layer ' + self.nameOfLayerPath + ' done!')
 
     def saveWeight(self, modelName, modelPath, layerNameOfWeightsToSave):
         print("Save layer: " + layerNameOfWeightsToSave + " for epoch model " + modelPath)
-        layerArray = checkpoint_utils.load_variable(modelPath, layerNameOfWeightsToSave)
+        hmmSet = pyhtk.HTKModelReader(modelPath, '').getHiddenMarkovModelSet()
+        layerArray = hmmSet.getNMatrixTable()[layerNameOfWeightsToSave].getValuesAsNumPyArray()
         np.save(os.path.join(self.saveWeightsPath, self.nameOfLayerPath + '_' + modelName),layerArray) 
