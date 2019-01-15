@@ -294,7 +294,7 @@ class Plotter(object):
 
         if(self.layer.dimInput == 1 and not isinstance(axs, np.ndarray)):
             axs = [[axs]]
-        elif(sel.layer.dimInput == 1):
+        elif(self.layer.dimInput == 1):
             axs = [axs]
         elif(len(axs.shape) < 2):
             axs = [[ax] for ax in axs]

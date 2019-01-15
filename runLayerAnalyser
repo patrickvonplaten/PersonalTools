@@ -38,7 +38,7 @@ if __name__ == "__main__":
     parser.add_argument('-log', action='store_true', default=False, help='If "-log" is added then plots of conv layer will be plotted in log scale') 
     parser.add_argument('-a', action='store_true', default=False, help='If "-a" is added then the network structure will be loaded and shown') 
     parser.add_argument('--d',help='domains that should be plotted: "time" and/or "freq"',default='time,freq')
-    parser.add_argument('--init',help='if layer is initialized with previously trained network, give the path of the needed network file. Layer names of previously trained network used for init and network to be analysed have to match', default=None)
+    parser.add_argument('--init',help='if layer is initialized with previously trained network, give the path to the MMF weight file. Obviously, dimension of weights have to match', default=None)
 
     args = vars(parser.parse_args())
 
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         
     modelDir = os.path.join(pathToStepDir,modelDirRelativ)
 
-    initWeightForLayerPath = args['init']
+    pathToInitWeight = args['init']
     layerNameForInitWeight = None
     layerName = args['layer']
     pathLayerName = layerName.replace('/','_')
@@ -92,9 +92,8 @@ if __name__ == "__main__":
     doWeightExist = os.path.exists(pathToSaveWeightsDir)
     doAnalysisDirExist = os.path.exists(pathToAnalysisDir)
 
-    if initWeightForLayerPath:
+    if pathToInitWeight:
         plottingConfigs['plotRange'].insert(0, 0)
-        layerNameForInitWeight = '/'.join(layerName.split('/')[1:])
 
     if not doAnalysisDirExist:
         os.makedirs(pathToAnalysisDir)
@@ -107,7 +106,7 @@ if __name__ == "__main__":
 
     if(doSaveWeights or not doWeightExist):
         from returnnTfNetworkLayerSaver import LayerWeightSaver
-        lws = LayerWeightSaver(modelDir, pathToSaveWeightsDir, layerName, initWeightForLayerPath, layerNameForInitWeight)
+        lws = LayerWeightSaver(modelDir, pathToSaveWeightsDir, layerName, pathToInitWeight)
         numEpochs = lws.numEpochs
     else:
         print("Weights already exist. If you want to delete old weights and save new weights, add '-rf' to the command.")
