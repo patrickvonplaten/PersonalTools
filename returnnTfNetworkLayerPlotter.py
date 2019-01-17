@@ -7,6 +7,8 @@ import os
 import sys
 import ipdb 
 
+
+
 class ReturnnLayerPlotter(object):
 
     def __init__(self,pathToAnalysisDir, pathToWeights, nameOfLayer, plottingConfigs, numEpochs):
@@ -17,6 +19,7 @@ class ReturnnLayerPlotter(object):
         self.plottingConfigs = plottingConfigs
         self.numEpochs = numEpochs
         self.epochRangeToPlotPerColumn = [self.numEpochs if x == 'numEpochs' else int(x) for x in self.plottingConfigs['plotRange']]
+        self.layerType = self.plottingConfigs['layerType']
         self.weights = self.loadWeights()
         self.layer = self.getLayer()
         self.plotter = Plotter(self.pathToAnalysisDir, self.plottingConfigs, self.layer, self.epochRangeToPlotPerColumn)
@@ -39,13 +42,18 @@ class ReturnnLayerPlotter(object):
         if(isLayerWeightComposedOf1Subarrays):
             return FeedForwardLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings) 
         elif(isLayerWeightComposedOf2Subarrays):
-            return Conv1DLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog) 
+            if(self.layerType == 'conv'):
+                return Conv1DLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog) 
+            elif(self.layerType == 'feed'):
+                return FeedForwardLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog)
+
         elif(isLayerWeightComposedOf3Subarrays):
             return Conv2DLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings) 
 
     def run(self):
         self.plotter.plot()
         print('...plotting graphs for ' + str(self.nameOfLayer) + ' done!')
+
 
 class Layer(object):
     """This is an abstract class"""
@@ -62,6 +70,7 @@ class Layer(object):
         self.domain = None 
         self.dimInputIdx = 0
         self.dimInput = 1  
+        self.plotableWeights = self.create_plotable_weights(weights) 
     
     def setDomain(self, domain):
         self.domain = domain
@@ -94,20 +103,70 @@ class Layer(object):
    
     def setLayerType(self, layerType):
         self.layerType = layerType 
-    
+
+    def create_plotable_weights(self, weights):
+        self.plotableWeights = []
+        for i in range(self.dimInput):
+            self.plotableWeights.append([x for x in weights])
+        return self.plotableWeights
+
+class FourierFilterWeights(object):
+
+    def __init__(self, plotableWeights, filterSize, isPlottingDomainLog, timeFreqRatio=2): 
+        self.plotableWeights = plotableWeights
+        self.filterSize = filterSize 
+        self.timeFreqRatio = timeFreqRatio
+        self.permutation = None 
+        self.isPlottingDomainLog = isPlottingDomainLog
+        self.channelUsedForPermutation = 0 
+        self.timeAxisTime = np.arange(self.filterSize)
+        self.timeAxisFreq = np.arange(int(self.filterSize/2))
+        self.plotableWeightsFreq, self.plotableWeightsFreqSorted = self.getFrequencyDomain()
+
+    def fourierTransform(self, plotableWeightsSingleDim, sortFn):
+            l = []
+            for weightsEpoch in plotableWeightsSingleDim:
+                layerWeightsFreqTransposed = np.fft.fft(weightsEpoch).T
+                layerWeightsFreqTransposed = layerWeightsFreqTransposed[:int(len(layerWeightsFreqTransposed)/2)]
+                layerWeightsFreqTransposedAbsolute = np.absolute(layerWeightsFreqTransposed.T)
+                if(self.isPlottingDomainLog):
+                    layerWeightsFreqTransposedAbsolute = np.log(layerWeightsFreqTransposedAbsolute)
+                l.append(sortFn(layerWeightsFreqTransposedAbsolute))
+            return l
+
+    def getFrequencyDomain(self):
+        timeAxis = np.arange(self.filterSize/self.timeFreqRatio)
+        plotableWeightsFreq = [self.fourierTransform(x, self.noSortFreq) for x in self.plotableWeights]
+        plotableWeightsFreqSorted = [self.fourierTransform(x, self.sortFreq) for x in self.plotableWeights]
+        return plotableWeightsFreq, plotableWeightsFreqSorted
+
+    def noSortFreq(self, x):
+        return x
+
+    def sortFreq(self, x):
+        if(not isinstance(self.permutation,np.ndarray)):
+            self.permutation = x.argmax(axis=1).argsort()
+        return x[self.permutation] 
+
+
 class FeedForwardLayer(Layer):
     
     def __init__(self, weights, name, namePath, wishedPlottings):
-        # Needs to be checked!
         super(FeedForwardLayer, self).__init__(weights, name, namePath)
-        self.plotableWeightsTime = self.weights
+        self.filterSize = self.shape[1]
+        self.numFilters = self.shape[0]
+        assert weights[0].shape[0] == self.numFilters, "dim not correct"
+        assert weights[0].shape[1] == self.filterSize, "dim not correct"
         self.addToAllowedPlottings(['2DWeightsHeat'])
         self.setLayerType(type(self).__name__)
         self.createPlottingsToDo(wishedPlottings)
+
+        self.fourierFilterWeights = FourierFilterWeights(self.plotableWeights, self.filterSize, isPlottingDomainLog)
+        self.plotableWeightsFreq, self.plotableWeightsFreqSorted = self.fourierFilterWeights.getFrequencyDomain()
         
     def getPlotable2DWeights(self):
         assert self.dimInputIdx == 0, "for feed forward layer there is always only one dim"
-        return self.plotableWeightsTime
+        return self.plotableWeights
 
     def getPlotable1DWeights(self):
         pass  
@@ -116,35 +175,24 @@ class Conv1DLayer(Layer):
 
     def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog):
         super(Conv1DLayer, self).__init__(weights, name, namePath)
-        self.timeFreqRatio = 2
-        self.isPlottingDomainLog = isPlottingDomainLog
         self.filterSize = self.shape[1]
         self.numFilters = self.shape[0]
         assert weights[0].shape[0] == self.numFilters, "dim not correct"
         assert weights[0].shape[1] == self.filterSize, "dim not correct"
-        self.plotableWeightsTime = []
-    
-        for i in range(self.dimInput):
-            self.plotableWeightsTime.append([x for x in weights])
-            
-        self.permutation = None 
-        self.plotableWeightsFreq, self.plotableWeightsFreqSorted = self.getFrequencyDomain()
-        self.timeAxisTime = np.arange(self.filterSize)
-        self.timeAxisFreq = np.arange(int(self.filterSize/2))
-        self.name = name
         self.addToAllowedPlottings(['1DWeightsSimpleAll','1DWeightsSimpleDetail','2DWeightsHeat'])
         self.setLayerType(type(self).__name__)
         self.createPlottingsToDo(wishedPlottings)
-        self.channelUsedForPermutation = 0 
+        self.fourierFilterWeights = FourierFilterWeights(self.plotableWeights, self.filterSize, isPlottingDomainLog)
+        self.plotableWeightsFreq, self.plotableWeightsFreqSorted = self.fourierFilterWeights.getFrequencyDomain()
 
     def getPlotable2DWeights(self):
         if self.domain == 'time':
-            return self.transformToHeatPlotableWeights(self.plotableWeightsTime, 1)
+            return self.transformToHeatPlotableWeights(self.plotableWeights, 1)
         elif self.domain == 'freq':
-            return self.transformToHeatPlotableWeights(self.plotableWeightsFreq, self.timeFreqRatio)
-    
+            return self.transformToHeatPlotableWeights(self.plotableWeightsFreq, self.fourierFilterWeights.timeFreqRatio)
+
     def getPlotableSorted2DWeights(self):
-        return self.transformToHeatPlotableWeights(self.plotableWeightsFreqSorted, self.timeFreqRatio)
+        return self.transformToHeatPlotableWeights(self.plotableWeightsFreqSorted, self.fourierFilterWeights.timeFreqRatio)
 
     def transformToHeatPlotableWeights(self, listOfWeights, filterSizeRatio):
         timeOrFreqAxisDim = self.filterSize/filterSizeRatio
@@ -163,39 +211,16 @@ class Conv1DLayer(Layer):
 
     def getPlotable1DWeights(self):
         if self.domain == 'time':
-            return self.plotableWeightsTime[self.dimInputIdx], self.timeAxisTime
+            return self.plotableWeights[self.dimInputIdx], self.timeAxisTime
         elif self.domain == 'freq':
             return self.plotableWeightsFreq[self.dimInputIdx], self.timeAxisFreq
 
-    def getFrequencyDomain(self):
-        timeAxis = np.arange(self.filterSize/self.timeFreqRatio)
-        plotableWeightsFreq = [self.fourierTransform(x, self.noSortFreq) for x in self.plotableWeightsTime]
-        plotableWeightsFreqSorted = [self.fourierTransform(x, self.sortFreq) for x in self.plotableWeightsTime]
-        return plotableWeightsFreq, plotableWeightsFreqSorted
-
-    def fourierTransform(self, plotableWeightsTimeSingleDim, sortFn):
-            l = []
-            for weightsEpoch in plotableWeightsTimeSingleDim:
-                layerWeightsFreqTransposed = np.fft.fft(weightsEpoch).T
-                layerWeightsFreqTransposed = layerWeightsFreqTransposed[:int(len(layerWeightsFreqTransposed)/2)]
-                layerWeightsFreqTransposedAbsolute = np.absolute(layerWeightsFreqTransposed.T)
-                if(self.isPlottingDomainLog):
-                    layerWeightsFreqTransposedAbsolute = np.log(layerWeightsFreqTransposedAbsolute)
-                l.append(sortFn(layerWeightsFreqTransposedAbsolute))
-            return l
-
-    def noSortFreq(self, x):
-        return x
-
-    def sortFreq(self, x):
-        if(not isinstance(self.permutation,np.ndarray)):
-            self.permutation = x.argmax(axis=1).argsort()
-        return x[self.permutation] 
 
 class Conv2DLayer(Layer):
     
     def __init__(self, weights, name, namePath, wishedPlottings):
         super(Conv2DLayer, self).__init__(weights, name, namePath)
+#        needs check!
         filterSizeDim1 = self.shape[0]
         filterSizeDim2 = self.shape[1]
         numFilters = self.shape[-1]
@@ -301,7 +326,7 @@ class Plotter(object):
 
         if(mode == 'sorted'):
             plotableWeights = self.layer.getPlotableSorted2DWeights()
-            mode = 'sorted_by_channel_' + str(self.layer.channelUsedForPermutation)
+            mode = 'sorted_by_channel_' + str(self.layer.fourierFilterWeights.channelUsedForPermutation)
         elif(mode == 'unsorted'):
             plotableWeights = self.layer.getPlotable2DWeights()
 
@@ -318,7 +343,7 @@ class Plotter(object):
         cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
         fig.colorbar(im, cax=cbar_ax)
         
-        numDomain = '_log_applied' if(self.layer.isPlottingDomainLog and self.layer.domain == 'freq') else ''
+        numDomain = '_log_applied' if(self.layer.fourierFilterWeights.isPlottingDomainLog and self.layer.domain == 'freq') else ''
         plt.suptitle(self.title + '_' + self.layer.domain + '_for_epoch_' + '_'.join(str(x) for x in self.epochRangeToPlotPerColumn) + numDomain, fontsize=self.titleFontSize, y=self.titleYPosition)
         plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_heat_map_' + self.layer.domain + '_' + mode + numDomain)
         

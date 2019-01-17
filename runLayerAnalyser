@@ -17,7 +17,7 @@ if __name__ == "__main__":
     """)
 
     parser.add_argument('--dir', help='Step directory where returnn network files are stored. If nothing is provided, the current directory will be used as the step directory', default=None)
-    parser.add_argument('--layer', help='Name of layer as defined in returnn config file that is to be plotted,f.e.: "CNNLayer1_kernels"', default='CNNLayer1_kernels')
+    parser.add_argument('--layer', help='Name of layer as defined in returnn config file that is to be plotted,f.e.: "CNNLayer1_kernels, FCLayer1_weight"', default='CNNLayer1_kernels')
     parser.add_argument('--hmm', help='relativ path to hmm folder which contains the weights to be plotted', default='hmm0')
     parser.add_argument('--title', help='Title for all plots, that should be specified by the user', default='plot')
     parser.add_argument('--type', help="""
@@ -34,6 +34,7 @@ if __name__ == "__main__":
     parser.add_argument('--spc',help='samples to be plotted per column. Make sure that samples per row * samples per column is equal to #filtres', default=16)
     parser.add_argument('--figS',help='figure size of plot as tuple',default='22,27')
     parser.add_argument('--r',help='epoch range over which weights should be plotted. In case in detail plots should be plotted, this arguments needs to be set! Default is last',default='numEpochs')
+    parser.add_argument('--layType', help='put in the layer type to plot', default='conv') 
     parser.add_argument('-rf', action='store_true', default=False, help='If "-rf" is added then weight directory will be deleted and recreated') 
     parser.add_argument('-log', action='store_true', default=False, help='If "-log" is added then plots of conv layer will be plotted in log scale') 
     parser.add_argument('-a', action='store_true', default=False, help='If "-a" is added then the network structure will be loaded and shown') 
@@ -67,7 +68,8 @@ if __name__ == "__main__":
         'samplesPerColumn': args['spc'],
         'title': args['title'],
         'cmap': args['cmap'],
-        'log': args['log']
+        'log': args['log'],
+        'layerType': args['layType']
     }
 
     bashCommand = "pwd"
