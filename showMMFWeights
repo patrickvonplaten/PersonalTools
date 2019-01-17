@@ -4,20 +4,18 @@ import pyhtk
 import ipdb
 
 MMFFilePath=sys.argv[1]
+#name = 'CNNLayer1_kernels'
+name = 'FCLayer1_weight'
 
 def getWeights(layerName, hmmSet):
     return hmmSet.getNMatrixTable()[layerName].getValuesAsNumPyArray()
 
-def print_layer_Values(MMFFilePath, layerName):
+def print_layer_values(MMFFilePath, layerName):
     hmmSet = pyhtk.HTKModelReader(MMFFilePath, '').getHiddenMarkovModelSet()
     layerArray = getWeights(layerName, hmmSet)
     print('layerArray[0][:20]: {}'.format(layerArray[0][:20]))
 
-def print_CNNLayer1_kernels():
-    layerName = 'CNNLayer1_kernels'
-    print_layer_Values(MMFFilePath, layerName) 
-
 for MMFFilePath in sys.argv[1:]:
     print('Print values for MMFFilePath: {}'.format(MMFFilePath))
-    print_CNNLayer1_kernels()
+    print_layer_values(MMFFilePath, name)
 
