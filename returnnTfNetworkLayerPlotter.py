@@ -30,7 +30,7 @@ class ReturnnLayerPlotter(object):
         for i in self.epochRangeToPlotPerColumn:
             epochWeight = np.load(os.path.join(self.pathToWeights, self.nameOfLayerPath + '_epoch' + str(i) + '_MMF.npy'))
             if(self.reverse):
-                epochWeight = np.flip(epochWeight, axis=0)
+                epochWeight = np.flip(epochWeight, axis=1)
             weights.append(np.squeeze(epochWeight))
         return weights
 
