@@ -323,7 +323,7 @@ class Plotter(object):
 
     def plot1DGraph(self, axs, axsRowIdx, axsColIdx, xAxisValues, yAxisValues, colors_idx):
         axs[axsRowIdx][axsColIdx].plot(xAxisValues, yAxisValues, self.colors[colors_idx])
-        axs[axsRowIdx][axsColIdx].grid()
+        axs[axsRowIdx][axsColIdx].grid(b=True)
         return axs
 
     def plot2DHeatWeights(self, mode):
