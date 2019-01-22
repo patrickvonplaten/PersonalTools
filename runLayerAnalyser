@@ -21,19 +21,19 @@ if __name__ == "__main__":
     parser.add_argument('--hmm', help='relativ path to hmm folder which contains the weights to be plotted', default='hmm0')
     parser.add_argument('--title', help='Title for all plots, that should be specified by the user', default='plot')
     parser.add_argument('--type', help="""
-    Decide which plotting type is wanted. Make a list by choesing of '1Do','1Dd','2Dh',3Dh' with 
-    '1Do' = weights, time plotting of last epoch for all filters on one plot
+    Decide which plotting type is wanted. Make a list by choesing of '1D','1Dd','2D',3Dh' with 
+    '1D' = weights, time plotting for all filters on one plot for all epochs
     '1Dd' = weights, time plotting over specified epochs for all filters in multiple plots defined by other configurations
-    '2Dh' = filter, weights plotting with values shown in heat mapping
+    '2D' = filter, weights plotting with values shown in heat mapping
     '3D' = for 2D filters only. filter's first dimension, weights plotting with values shown in heat mapping over multiple plots for all filter's second dimension.
     Default is 'all' meaning that all possible plots for this layer are plotted. 
-    """, default='1Do,1Dd,2Dh,3Dh')
+    """, default='1D,1Dd,2D,3Dh')
     parser.add_argument('--c',help='define colors used for matplotlib colors for 1D plots. Make sure that num of colors is equal to samplesPerRow', default='c,b,r,g')
     parser.add_argument('--cmap',help='define colormap theme used for 2D Heat Map for conv layers.' , default='hot')
     parser.add_argument('--spr',help='samples to be plotted per row in plot',default=4)
     parser.add_argument('--spc',help='samples to be plotted per column. Make sure that samples per row * samples per column is equal to #filtres', default=16)
     parser.add_argument('--figS',help='figure size of plot as tuple',default='22,27')
-    parser.add_argument('--r',help='epoch range over which weights should be plotted. In case in detail plots should be plotted, this arguments needs to be set! Default is last',default='numEpochs')
+    parser.add_argument('--r',help='epoch range over which weights should be plotted. In case in detail plots should be plotted, this arguments needs to be set! Default is last = -1 ',default='-1')
     parser.add_argument('--layType', help='put in the layer type to plot', default='conv') 
     parser.add_argument('-rf', action='store_true', default=False, help='If "-rf" is added then weight directory will be deleted and recreated') 
     parser.add_argument('-rev', action='store_true', default=False, help='If "-rev" is added then weights array will be flippend for every kernel') 
@@ -53,9 +53,9 @@ if __name__ == "__main__":
         args[arg] = tuple([int(x) for x in args[arg].split(',')])
 
     plottingsFullName={
-        '1Do': '1DWeightsSimpleAll',
+        '1D': '1DWeightsSimpleAll',
         '1Dd': '1DWeightsSimpleDetail',
-        '2Dh': '2DWeightsHeat',
+        '2D': '2DWeightsHeat',
         '3Dh': '3DWeightsHeat'
     }
 

@@ -18,7 +18,7 @@ class ReturnnLayerPlotter(object):
         self.nameOfLayerPath = nameOfLayer.replace('/','_')
         self.plottingConfigs = plottingConfigs
         self.numEpochs = numEpochs
-        self.epochRangeToPlotPerColumn = [self.numEpochs if x == 'numEpochs' else int(x) for x in self.plottingConfigs['plotRange']]
+        self.epochRangeToPlotPerColumn = [self.numEpochs + int(x) - 1 if int(x) < 0 else int(x) for x in self.plottingConfigs['plotRange']]
         self.reverse = self.plottingConfigs['reverse']
         self.layerType = self.plottingConfigs['layerType']
         self.weights = self.loadWeights()
@@ -276,15 +276,23 @@ class Plotter(object):
         fig, axs = plt.subplots(self.samplesPerColumn, self.samplesPerRow, figsize=self.plottingConfigs['figSize'])
         plotableWeights, timeArray = self.layer.getPlotable1DWeights()
         
-        for i in range(self.samplesPerColumn):
-            for j in range(self.samplesPerRow):
-                filterNum = self.samplesPerRow*i+j
-                self.plot1DGraph(axs, i, j, timeArray, plotableWeights[-1][filterNum], j)
-                self.setGraphYAxisLable(axs, i, j, 'filter.' + "%02d" % (filterNum+1,))
+        for epochRangeIdx, plotableWeight in enumerate(plotableWeights):
+            for i in range(self.samplesPerColumn):
+                for j in range(self.samplesPerRow):
+                    filterNum = self.samplesPerRow*i+j
+#                    ipdb.set_trace()
+                    self.plot1DGraph(axs, i, j, timeArray, plotableWeight[filterNum], j)
+                    self.setGraphYAxisLable(axs, i, j, 'filter.' + "%02d" % (filterNum+1,))
                 
-        plt.suptitle(self.title + '_' + self.layer.domain + '_' + str(self.layer.dimInputIdx) + 'dimIdx', fontsize=self.titleFontSize, y=self.titleYPosition)
-        plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_lastEpoch_' + self.layer.domain + '_' + str(self.layer.dimInputIdx) + '_all')
+            plotId = '_epoch' + str(self.epochRangeToPlotPerColumn[epochRangeIdx]) + '_' + self.layer.domain + '_dimIdx' + str(self.layer.dimInputIdx) + '_all'
+            self.savePlot(plt, plotId)
+            self.setPlotTitle(plt, plotId)
 
+    def savePlot(self, plot, plotId):
+        plot.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + plotId)
+
+    def setPlotTitle(self, plot, plotId):
+        plt.suptitle(self.title + '_' + plotId, fontsize=self.titleFontSize, y=self.titleYPosition)
 
     def plot1DSimpleWeightsDetail(self):
         assert 'plotRange' in self.plottingConfigs and len(self.plottingConfigs['plotRange']) > 1, 'plotting range needs to be defined and bigger than 1 - not yet supported' 
