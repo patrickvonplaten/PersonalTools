@@ -181,14 +181,14 @@ class FeedForwardLayer(Layer):
         self.numFilters = self.shape[0]
         assert weights[0].shape[0] == self.numFilters, "dim not correct"
         assert weights[0].shape[1] == self.filterSize, "dim not correct"
-        self.addToAllowedPlottings(['2DWeightsHeat'])
+        self.addToAllowedPlottings(['1DWeightsSimpleAll','2DWeightsHeat'])
         self.setLayerType(type(self).__name__)
         self.createPlottingsToDo(wishedPlottings)
         self.processedWeights = ProcessedWeights(self.weights, self.filterSize, isPlottingDomainLog, self.dimInput)
         self.channelUsedForPermutation = 0 
 
     def getPlotable1DWeights(self):
-        pass  
+        return self.processedWeights.getPlotable1DWeights(self.domain, self.dimInputIdx)
 
     def getPlotable2DWeights(self):
         return self.processedWeights.getPlotable2DWeights(self.domain)
