@@ -31,7 +31,7 @@ if __name__ == "__main__":
     parser.add_argument('--c',help='define colors used for matplotlib colors for 1D plots. Make sure that num of colors is equal to samplesPerRow', default='c,b,r,g')
     parser.add_argument('--cmap',help='define colormap theme used for 2D Heat Map for conv layers.' , default='hot')
     parser.add_argument('--spr',help='samples to be plotted per row in plot',default=4)
-    parser.add_argument('--spc',help='samples to be plotted per column. Make sure that samples per row * samples per column is equal to #filtres', default=16)
+    parser.add_argument('--spc',help='samples to be plotted per column in plot',default=0)
     parser.add_argument('--figS',help='figure size of plot as tuple',default='22,27')
     parser.add_argument('--r',help='epoch range over which weights should be plotted. In case in detail plots should be plotted, this arguments needs to be set! Default is last = -1 ',default='-1')
     parser.add_argument('--layType', help='put in the layer type to plot', default='conv') 
@@ -61,12 +61,12 @@ if __name__ == "__main__":
 
     plottingConfigs={
         'samplesPerRow': args['spr'],
+        'samplesPerColumn': args['spc'],
         'plotRange': args['r'],
         'figSize': args['figS'],
         'domainType': args['d'],
         'typeOfPlotting': [ plottingsFullName[x] for x in args['type']],
         'colors': args['c'],
-        'samplesPerColumn': args['spc'],
         'title': args['title'],
         'cmap': args['cmap'],
         'log': args['log'],

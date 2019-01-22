@@ -245,7 +245,7 @@ class Plotter(object):
         self.colors = self.plottingConfigs['colors']
         self.epochRangeToPlotPerColumn = epochRangeToPlotPerColumn
         self.samplesPerRow = self.plottingConfigs['samplesPerRow']
-        self.samplesPerColumn = self.plottingConfigs['samplesPerColumn']
+        self.samplesPerColumn = int(self.plottingConfigs['samplesPerColumn']) if int(self.plottingConfigs['samplesPerColumn']) > 0 else None
         self.figSize = self.plottingConfigs['figSize']
         self.title = self.plottingConfigs['title']
         self.titleFontSize = 30 
@@ -271,18 +271,21 @@ class Plotter(object):
          
     def plot1DSimpleWeightsAll(self):
         assert 'samplesPerRow' in self.plottingConfigs, 'Needs to give the attribute samplesPerRow'
-        assert 'samplesPerColumn' in self.plottingConfigs, 'Needs to give the attribute samplesPerColumn'
+
+        plotableWeights, timeArray = self.layer.getPlotable1DWeights()
+        numFilters = plotableWeights[0].shape[0]
+        if(not self.samplesPerColumn):
+            self.samplesPerColumn = int(np.ceil(numFilters/float(self.samplesPerRow)))
 
         fig, axs = plt.subplots(self.samplesPerColumn, self.samplesPerRow, figsize=self.plottingConfigs['figSize'])
-        plotableWeights, timeArray = self.layer.getPlotable1DWeights()
         
         for epochRangeIdx, plotableWeight in enumerate(plotableWeights):
             for i in range(self.samplesPerColumn):
                 for j in range(self.samplesPerRow):
                     filterNum = self.samplesPerRow*i+j
-#                    ipdb.set_trace()
-                    self.plot1DGraph(axs, i, j, timeArray, plotableWeight[filterNum], j)
-                    self.setGraphYAxisLable(axs, i, j, 'filter.' + "%02d" % (filterNum+1,))
+                    if(filterNum < numFilters):
+                        self.plot1DGraph(axs, i, j, timeArray, plotableWeight[filterNum], j)
+                        self.setGraphYAxisLable(axs, i, j, 'filter.' + "%02d" % (filterNum+1,))
                 
             plotId = '_epoch' + str(self.epochRangeToPlotPerColumn[epochRangeIdx]) + '_' + self.layer.domain + '_dimIdx' + str(self.layer.dimInputIdx) + '_all'
             self.savePlot(plt, plotId)
@@ -293,34 +296,6 @@ class Plotter(object):
 
     def setPlotTitle(self, plot, plotId):
         plt.suptitle(self.title + '_' + plotId, fontsize=self.titleFontSize, y=self.titleYPosition)
-
-    def plot1DSimpleWeightsDetail(self):
-        assert 'plotRange' in self.plottingConfigs and len(self.plottingConfigs['plotRange']) > 1, 'plotting range needs to be defined and bigger than 1 - not yet supported' 
-        assert 'samplesPerRow' in self.plottingConfigs, 'Needs to give the attribute samplesPerRow'
-        assert type(self.layer).__name__ == 'Conv1DLayer', 'Currently only supported for Conv1DLayer - but could be changed by defining numFilters in other layers'
-        assert self.layer.numFilters % self.samplesPerRow == 0, 'numFilters should be a multiple of samples per row'
-        
-        simple1DPlotDir = self.pathToAnalysisDir + '/' + '1DSimplePlots' + '_' + self.layer.domain+ '_' + str(self.layer.dimInputIdx) + 'dimIdx'
-        if not os.path.exists(simple1DPlotDir):
-            os.makedirs(simple1DPlotDir)
-
-        plotableWeights, timeArray = self.layer.getPlotable1DWeights()
-
-        for plotIdx in range(int(self.layer.numFilters/self.samplesPerRow)):
-            fig, axs = plt.subplots(self.samplesPerRow, len(self.epochRangeToPlotPerColumn), figsize=self.figSize) 
-            for epochRangeIdx, plotableWeight in enumerate(plotableWeights):
-                for i in range(self.samplesPerRow):
-                    filterNum = self.samplesPerRow*plotIdx + i
-                    self.plot1DGraph(axs, i, epochRangeIdx, timeArray, plotableWeight[filterNum], i)
-                    self.setGraphXAxisLable(axs, i, epochRangeIdx, self.layer.domain)
-                    self.setGraphYAxisLable(axs, i, epochRangeIdx, 'filter.' + "%02d" % (filterNum+1,) + '_epoch.'+ "%03d" % (self.epochRangeToPlotPerColumn[epochRangeIdx],) + '_weights')
-
-            nameToSave = self.layer.namePath + '_' + self.layer.domain + '_' + str(self.layer.dimInputIdx) + '_' + str(plotIdx*self.samplesPerRow+1) + '_to_' + str((plotIdx+1)*self.samplesPerRow)
-
-            plt.suptitle(self.title + '_' + self.layer.domain + '_' + str(self.layer.dimInputIdx) + 'dimIdx' + str(plotIdx*self.samplesPerRow+1) + '_to_' + str((plotIdx+1)*self.samplesPerRow), fontsize=self.titleFontSize, y=self.titleYPosition)
-            plt.savefig(simple1DPlotDir + '/' + nameToSave)
-            print('...saving ' + nameToSave)
-
     def plot1DGraph(self, axs, axsRowIdx, axsColIdx, xAxisValues, yAxisValues, colors_idx):
         axs[axsRowIdx][axsColIdx].plot(xAxisValues, yAxisValues, self.colors[colors_idx])
         axs[axsRowIdx][axsColIdx].grid(b=True)
