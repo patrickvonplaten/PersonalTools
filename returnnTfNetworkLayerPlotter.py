@@ -120,7 +120,6 @@ class ProcessedWeights(object):
             return self.transformToHeatPlotableWeights(self.plotableWeightsFreq, self.timeFreqRatio)
 
     def getPlotable1DWeights(self, domain, dimInputIdx):
-        ipdb.set_trace()
         if domain == 'time':
             return self.plotableWeights[dimInputIdx], self.timeAxisTime
         elif domain == 'freq':
@@ -280,12 +279,12 @@ class Plotter(object):
         for i in range(self.samplesPerColumn):
             for j in range(self.samplesPerRow):
                 filterNum = self.samplesPerRow*i+j
-                axs[i][j].plot(timeArray,plotableWeights[-1][filterNum],self.colors[j])
-                axs[i][j].grid()
-                axs[i][j].set_ylabel('filter.' + "%02d" % (filterNum+1,))
+                self.plot1DGraph(axs, i, j, timeArray, plotableWeights[-1][filterNum], j)
+                self.setGraphYAxisLable(axs, i, j, 'filter.' + "%02d" % (filterNum+1,))
                 
         plt.suptitle(self.title + '_' + self.layer.domain + '_' + str(self.layer.dimInputIdx) + 'dimIdx', fontsize=self.titleFontSize, y=self.titleYPosition)
         plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_lastEpoch_' + self.layer.domain + '_' + str(self.layer.dimInputIdx) + '_all')
+
 
     def plot1DSimpleWeightsDetail(self):
         assert 'plotRange' in self.plottingConfigs and len(self.plottingConfigs['plotRange']) > 1, 'plotting range needs to be defined and bigger than 1 - not yet supported' 
@@ -293,29 +292,32 @@ class Plotter(object):
         assert type(self.layer).__name__ == 'Conv1DLayer', 'Currently only supported for Conv1DLayer - but could be changed by defining numFilters in other layers'
         assert self.layer.numFilters % self.samplesPerRow == 0, 'numFilters should be a multiple of samples per row'
         
-        plotableWeights, timeArray = self.layer.getPlotable1DWeights()
         simple1DPlotDir = self.pathToAnalysisDir + '/' + '1DSimplePlots' + '_' + self.layer.domain+ '_' + str(self.layer.dimInputIdx) + 'dimIdx'
-
         if not os.path.exists(simple1DPlotDir):
             os.makedirs(simple1DPlotDir)
 
+        plotableWeights, timeArray = self.layer.getPlotable1DWeights()
+
         for plotIdx in range(int(self.layer.numFilters/self.samplesPerRow)):
             fig, axs = plt.subplots(self.samplesPerRow, len(self.epochRangeToPlotPerColumn), figsize=self.figSize) 
-            
             for epochRangeIdx, plotableWeight in enumerate(plotableWeights):
                 for i in range(self.samplesPerRow):
                     filterNum = self.samplesPerRow*plotIdx + i
-                    axs[i][epochRangeIdx].plot(timeArray, plotableWeight[filterNum],self.colors[i])
-                    axs[i][epochRangeIdx].grid()
-                    axs[i][epochRangeIdx].set_ylabel('filter.' + "%02d" % (filterNum+1,) + '_epoch.'+ "%03d" % (self.epochRangeToPlotPerColumn[epochRangeIdx],) + '_weights')
-                    axs[i][epochRangeIdx].set_xlabel(self.layer.domain) 
+                    self.plot1DGraph(axs, i, epochRangeIdx, timeArray, plotableWeight[filterNum], i)
+                    self.setGraphXAxisLable(axs, i, epochRangeIdx, self.layer.domain)
+                    self.setGraphYAxisLable(axs, i, epochRangeIdx, 'filter.' + "%02d" % (filterNum+1,) + '_epoch.'+ "%03d" % (self.epochRangeToPlotPerColumn[epochRangeIdx],) + '_weights')
 
             nameToSave = self.layer.namePath + '_' + self.layer.domain + '_' + str(self.layer.dimInputIdx) + '_' + str(plotIdx*self.samplesPerRow+1) + '_to_' + str((plotIdx+1)*self.samplesPerRow)
 
             plt.suptitle(self.title + '_' + self.layer.domain + '_' + str(self.layer.dimInputIdx) + 'dimIdx' + str(plotIdx*self.samplesPerRow+1) + '_to_' + str((plotIdx+1)*self.samplesPerRow), fontsize=self.titleFontSize, y=self.titleYPosition)
             plt.savefig(simple1DPlotDir + '/' + nameToSave)
             print('...saving ' + nameToSave)
-    
+
+    def plot1DGraph(self, axs, axsRowIdx, axsColIdx, xAxisValues, yAxisValues, colors_idx):
+        axs[axsRowIdx][axsColIdx].plot(xAxisValues, yAxisValues, self.colors[colors_idx])
+        axs[axsRowIdx][axsColIdx].grid()
+        return axs
+
     def plot2DHeatWeights(self, mode):
         assert mode in ['sorted','unsorted'], "mode has to be sorted or unsorted"
         
@@ -350,7 +352,14 @@ class Plotter(object):
         numDomain = '_log_applied' if(self.layer.isPlottingDomainLog and self.layer.domain == 'freq') else ''
         plt.suptitle(self.title + '_' + self.layer.domain + '_for_epoch_' + '_'.join(str(x) for x in self.epochRangeToPlotPerColumn) + numDomain, fontsize=self.titleFontSize, y=self.titleYPosition)
         plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_heat_map_' + self.layer.domain + '_' + mode + numDomain)
+
+    def setGraphXAxisLable(self, axs, axsRowIdx, axsColIdx, label):
+        axs[axsRowIdx][axsColIdx].set_xlabel(label) 
+
+    def setGraphYAxisLable(self, axs, axsRowIdx, axsColIdx, label):
+        axs[axsRowIdx][axsColIdx].set_ylabel(label)
         
+
     def plot3DHeatWeights(self):
         plotableWeights = self.layer.getPlotable3DWeights
         heat3DWeightsDir = self.pathToAnalysisDir + '/' + '2DHeatPlotsForFilter' + '_' + self.layer.domain
