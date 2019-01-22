@@ -73,6 +73,7 @@ class Layer(object):
         self.layerType = None
         self.dimInputIdx = 0
         self.dimInput = 1
+        self.domain = None
     
     def setDomain(self, domain):
         self.domain = domain
@@ -112,17 +113,18 @@ class ProcessedWeights(object):
         self.plotableWeights = self.create_plotable_weights(weights)
         self.plotableWeightsFreq, self.plotableWeightsFreqSorted = self.getFrequencyDomain()
 
-    def create_plotable_weights(self, weights):
-        self.plotableWeights = []
-        for i in range(self.dimInput):
-            self.plotableWeights.append([x for x in weights])
-        return self.plotableWeights
-
     def getPlotable2DWeights(self, domain):
         if domain == 'time':
             return self.transformToHeatPlotableWeights(self.plotableWeights, 1)
         elif domain == 'freq':
             return self.transformToHeatPlotableWeights(self.plotableWeightsFreq, self.timeFreqRatio)
+
+    def getPlotable1DWeights(self, domain, dimInputIdx):
+        ipdb.set_trace()
+        if domain == 'time':
+            return self.plotableWeights[dimInputIdx], self.timeAxisTime
+        elif domain == 'freq':
+            return self.plotableWeightsFreq[dimInputIdx], self.timeAxisFreq
 
     def getPlotableSorted2DWeights(self):
         return self.transformToHeatPlotableWeights(self.plotableWeightsFreqSorted, self.timeFreqRatio)
@@ -132,21 +134,25 @@ class ProcessedWeights(object):
         timeOrFreqChannelDim = self.dimInput * timeOrFreqAxisDim 
         numChannels = len(listOfWeights)
         numEpochToPlot = len(listOfWeights[0])
-
         transformedList = []
         for j in range(numEpochToPlot):
             l = []
             for i in range(numChannels):
                 l.append(np.swapaxes(listOfWeights[i][j],0,1))
             transformedList.append(l)
-
         return transformedList
 
-    def getPlotable1DWeights(self, domain, dimInputIdx):
-        if domain == 'time':
-            return self.plotableWeights[dimInputIdx], self.timeAxisTime
-        elif domain == 'freq':
-            return self.plotableWeightsFreq[dimInputIdx], self.timeAxisFreq
+    def create_plotable_weights(self, weights):
+        self.plotableWeights = []
+        for i in range(self.dimInput):
+            self.plotableWeights.append([x for x in weights])
+        return self.plotableWeights
+
+    def getFrequencyDomain(self):
+        timeAxis = np.arange(self.filterSize/self.timeFreqRatio)
+        plotableWeightsFreq = [self.fourierTransform(x, self.noSortFreq) for x in self.plotableWeights]
+        plotableWeightsFreqSorted = [self.fourierTransform(x, self.sortFreq) for x in self.plotableWeights]
+        return plotableWeightsFreq, plotableWeightsFreqSorted
 
     def fourierTransform(self, plotableWeightsSingleDim, sortFn):
             l = []
@@ -158,12 +164,6 @@ class ProcessedWeights(object):
                     layerWeightsFreqTransposedAbsolute = np.log(layerWeightsFreqTransposedAbsolute)
                 l.append(sortFn(layerWeightsFreqTransposedAbsolute))
             return l
-
-    def getFrequencyDomain(self):
-        timeAxis = np.arange(self.filterSize/self.timeFreqRatio)
-        plotableWeightsFreq = [self.fourierTransform(x, self.noSortFreq) for x in self.plotableWeights]
-        plotableWeightsFreqSorted = [self.fourierTransform(x, self.sortFreq) for x in self.plotableWeights]
-        return plotableWeightsFreq, plotableWeightsFreqSorted
 
     def noSortFreq(self, x):
         return x
@@ -191,8 +191,8 @@ class FeedForwardLayer(Layer):
     def getPlotable1DWeights(self):
         pass  
 
-    def getPlotable2DWeights(self, domain):
-        return self.processedWeights.getPlotable2DWeights(domain)
+    def getPlotable2DWeights(self):
+        return self.processedWeights.getPlotable2DWeights(self.domain)
 
     def getPlotableSorted2DWeights(self):
         return self.processedWeights.getPlotableSorted2DWeights()
@@ -212,10 +212,10 @@ class Conv1DLayer(Layer):
         self.channelUsedForPermutation = 0 
 
     def getPlotable1DWeights(self):
-        pass  
+        return self.processedWeights.getPlotable1DWeights(self.domain, self.dimInputIdx)
 
-    def getPlotable2DWeights(self, domain):
-        return self.processedWeights.getPlotable2DWeights(domain)
+    def getPlotable2DWeights(self):
+        return self.processedWeights.getPlotable2DWeights(self.domain)
 
     def getPlotableSorted2DWeights(self):
         return self.processedWeights.getPlotableSorted2DWeights()
@@ -332,7 +332,7 @@ class Plotter(object):
             plotableWeights = self.layer.getPlotableSorted2DWeights()
             mode = 'sorted_by_channel_' + str(self.layer.channelUsedForPermutation)
         elif(mode == 'unsorted'):
-            plotableWeights = self.layer.getPlotable2DWeights(self.layer.domain)
+            plotableWeights = self.layer.getPlotable2DWeights()
 
         for epochRangeIdx, plotableWeight in enumerate(plotableWeights):
             for dimInputIdx, plotableWeightPerDim in enumerate(plotableWeight): 
