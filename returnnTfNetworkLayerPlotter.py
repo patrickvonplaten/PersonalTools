@@ -18,7 +18,7 @@ class ReturnnLayerPlotter(object):
         self.nameOfLayerPath = nameOfLayer.replace('/','_')
         self.plottingConfigs = plottingConfigs
         self.numEpochs = numEpochs
-        self.epochRangeToPlotPerColumn = [self.numEpochs + int(x) - 1 if int(x) < 0 else int(x) for x in self.plottingConfigs['plotRange']]
+        self.epochRangeToPlotPerColumn = [self.numEpochs + int(x) + 1 if int(x) < 0 else int(x) for x in self.plottingConfigs['plotRange']]
         self.reverse = self.plottingConfigs['reverse']
         self.layerType = self.plottingConfigs['layerType']
         self.weights = self.loadWeights()
