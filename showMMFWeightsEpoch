@@ -3,9 +3,9 @@ import sys
 import pyhtk
 import ipdb
 
-MMFFilePaths=sys.argv[1:]
-name = 'CNNLayer1_kernels'
-#name = 'FCLayer1_weight'
+epochNumbersInput=sys.argv[1]
+#name = 'CNNLayer1_kernels'
+name = 'FCLayer1_weight'
 
 def getWeights(layerName, hmmSet):
     return hmmSet.getNMatrixTable()[layerName].getValuesAsNumPyArray()
@@ -15,7 +15,9 @@ def print_layer_values(MMFFilePath, layerName):
     layerArray = getWeights(layerName, hmmSet)
     print('layerArray[0][:20]: {}'.format(layerArray[0][:20]))
 
-for MMFFilePath in MMFFilePaths:
+epochNumbers = [ x for x in epochNumbersInput.split(',') ]
+for epochNumber in epochNumbers:
+    MMFFilePath = 'epoch' + epochNumber + '/MMF'
     print('Print values for MMFFilePath: {}'.format(MMFFilePath))
     print_layer_values(MMFFilePath, name)
 
