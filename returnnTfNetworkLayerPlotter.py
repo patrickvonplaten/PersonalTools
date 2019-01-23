@@ -277,9 +277,9 @@ class Plotter(object):
         if(not self.samplesPerColumn):
             self.samplesPerColumn = int(np.ceil(numFilters/float(self.samplesPerRow)))
 
-        fig, axs = plt.subplots(self.samplesPerColumn, self.samplesPerRow, figsize=self.plottingConfigs['figSize'])
         
         for epochRangeIdx, plotableWeight in enumerate(plotableWeights):
+            fig, axs = plt.subplots(self.samplesPerColumn, self.samplesPerRow, figsize=self.plottingConfigs['figSize'])
             for i in range(self.samplesPerColumn):
                 for j in range(self.samplesPerRow):
                     filterNum = self.samplesPerRow*i+j
