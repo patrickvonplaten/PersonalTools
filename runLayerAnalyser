@@ -35,12 +35,14 @@ if __name__ == "__main__":
     parser.add_argument('--figS',help='figure size of plot as tuple',default='22,27')
     parser.add_argument('--r',help='epoch range over which weights should be plotted. In case in detail plots should be plotted, this arguments needs to be set! Default is last = -1 ',default='-1')
     parser.add_argument('--layType', help='put in the layer type to plot', default='conv') 
+    parser.add_argument('--d',help='domains that should be plotted: "time" and/or "freq"',default='time,freq')
+    parser.add_argument('--init',help='if layer is initialized with previously trained network, give the path to the MMF weight file. Obviously, dimension of weights have to match', default=None)
+    parser.add_argument('--sampRate',help='if "pad" is added weight array is padded to fit sample rate, which can be set here.', default=16000)
     parser.add_argument('-rf', action='store_true', default=False, help='If "-rf" is added then weight directory will be deleted and recreated') 
     parser.add_argument('-rev', action='store_true', default=False, help='If "-rev" is added then weights array will be flippend for every kernel') 
     parser.add_argument('-log', action='store_true', default=False, help='If "-log" is added then plots of conv layer will be plotted in log scale') 
+    parser.add_argument('-pad', action='store_true', default=False, help='If "-pad" is added then fourier transform is done on zero padded array so that it fits with the sampling rate') 
     parser.add_argument('-a', action='store_true', default=False, help='If "-a" is added then the network structure will be loaded and shown') 
-    parser.add_argument('--d',help='domains that should be plotted: "time" and/or "freq"',default='time,freq')
-    parser.add_argument('--init',help='if layer is initialized with previously trained network, give the path to the MMF weight file. Obviously, dimension of weights have to match', default=None)
 
     args = vars(parser.parse_args())
 
@@ -71,7 +73,9 @@ if __name__ == "__main__":
         'cmap': args['cmap'],
         'log': args['log'],
         'layerType': args['layType'],
-        'reverse': args['rev']
+        'reverse': args['rev'],
+        'pad': args['pad'],
+        'sampleRate': args['sampRate']
     }
 
     bashCommand = "pwd"

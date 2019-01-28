@@ -41,12 +41,14 @@ class ReturnnLayerPlotter(object):
         isLayerWeightComposedOf3Subarrays = lenWeightsTensor == 3
         wishedPlottings = self.plottingConfigs['typeOfPlotting']
         isPlottingDomainLog = self.plottingConfigs['log']
+        doPaddedFourierTransform = self.plottingConfigs['pad']
+        sampleRate = self.plottingConfigs['sampleRate']
 
         if(isLayerWeightComposedOf1Subarrays):
-            return FeedForwardLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog)
+            return FeedForwardLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate)
         elif(isLayerWeightComposedOf2Subarrays):
             if(self.layerType == 'conv'):
-                return Conv1DLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog) 
+                return Conv1DLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate) 
             elif(self.layerType == 'feed'):
                 return FeedForwardLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog)
 
@@ -101,13 +103,15 @@ class Layer(object):
 
 class ProcessedWeights(object):
 
-    def __init__(self, weights, filterSize, isPlottingDomainLog, dimInput, timeFreqRatio=2): 
+    def __init__(self, weights, filterSize, isPlottingDomainLog, dimInput, doPaddedFourierTransform, sampleRate, timeFreqRatio=2): 
         self.dimInput = dimInput
         self.weights = weights
         self.filterSize = filterSize 
         self.timeFreqRatio = timeFreqRatio
         self.permutation = None 
         self.isPlottingDomainLog = isPlottingDomainLog
+        self.doPaddedFourierTransform = doPaddedFourierTransform
+        self.sampleRate = sampleRate
         self.timeAxisTime = np.arange(self.filterSize)
         self.timeAxisFreq = np.arange(int(self.filterSize/2))
         self.plotableWeights = self.create_plotable_weights(weights)
@@ -156,6 +160,12 @@ class ProcessedWeights(object):
     def fourierTransform(self, plotableWeightsSingleDim, sortFn):
             l = []
             for weightsEpoch in plotableWeightsSingleDim:
+                if(self.doPaddedFourierTransform):
+                    shapePadded = (weightsEpoch.shape[0], self.sampleRate)
+                    weightsEpochPadded = np.zeros(shapePadded)
+                    weightsEpochPadded[:,:self.filterSize] = weightsEpoch
+                    weightsEpoch = weightsEpochPadded
+
                 layerWeightsFreqTransposed = np.fft.fft(weightsEpoch).T
                 layerWeightsFreqTransposed = layerWeightsFreqTransposed[:int(len(layerWeightsFreqTransposed)/2)]
                 layerWeightsFreqTransposedAbsolute = np.absolute(layerWeightsFreqTransposed.T)
@@ -175,7 +185,7 @@ class ProcessedWeights(object):
 
 class FeedForwardLayer(Layer):
     
-    def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog):
+    def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate):
         super(FeedForwardLayer, self).__init__(weights, name, namePath, isPlottingDomainLog)
         self.filterSize = self.shape[1]
         self.numFilters = self.shape[0]
@@ -184,7 +194,7 @@ class FeedForwardLayer(Layer):
         self.addToAllowedPlottings(['1DWeightsSimpleAll','2DWeightsHeat'])
         self.setLayerType(type(self).__name__)
         self.createPlottingsToDo(wishedPlottings)
-        self.processedWeights = ProcessedWeights(self.weights, self.filterSize, isPlottingDomainLog, self.dimInput)
+        self.processedWeights = ProcessedWeights(self.weights, self.filterSize, isPlottingDomainLog, self.dimInput, doPaddedFourierTransform, sampleRate)
         self.channelUsedForPermutation = 0 
 
     def getPlotable1DWeights(self):
@@ -198,7 +208,7 @@ class FeedForwardLayer(Layer):
 
 class Conv1DLayer(Layer):
 
-    def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog):
+    def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate):
         super(Conv1DLayer, self).__init__(weights, name, namePath, isPlottingDomainLog)
         self.filterSize = self.shape[1]
         self.numFilters = self.shape[0]
@@ -207,7 +217,7 @@ class Conv1DLayer(Layer):
         self.addToAllowedPlottings(['1DWeightsSimpleAll','1DWeightsSimpleDetail','2DWeightsHeat'])
         self.setLayerType(type(self).__name__)
         self.createPlottingsToDo(wishedPlottings)
-        self.processedWeights = ProcessedWeights(self.weights, self.filterSize, isPlottingDomainLog, self.dimInput)
+        self.processedWeights = ProcessedWeights(self.weights, self.filterSize, isPlottingDomainLog, self.dimInput, doPaddedFourierTransform, sampleRate)
         self.channelUsedForPermutation = 0 
 
     def getPlotable1DWeights(self):
