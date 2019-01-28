@@ -118,7 +118,7 @@ if __name__ == "__main__":
         numEpochs = lws.numEpochs
     else:
         print("Weights already exist. If you want to delete old weights and save new weights, add '-rf' to the command.")
-        numEpochs = len([x for x in os.listdir(modelDir) if 'epoch' in x])
+        numEpochs = len([x for x in os.listdir(pathToSaveWeightsDir)]) 
 
     layerPlotter = ReturnnLayerPlotter(pathToAnalysisDir, pathToSaveWeightsDir, layerName, plottingConfigs, numEpochs)
     layerPlotter.run()
