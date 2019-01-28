@@ -113,7 +113,7 @@ class ProcessedWeights(object):
         self.doPaddedFourierTransform = doPaddedFourierTransform
         self.sampleRate = sampleRate
         self.timeAxisTime = np.arange(self.filterSize)
-        self.timeAxisFreq = np.arange(int(self.filterSize/2))
+        self.timeAxisFreq = np.arange(int(self.filterSize/2)) if not doPaddedFourierTransform else np.arange(int(self.sampleRate/2))
         self.plotableWeights = self.create_plotable_weights(weights)
         self.plotableWeightsFreq, self.plotableWeightsFreqSorted = self.getFrequencyDomain()
 
