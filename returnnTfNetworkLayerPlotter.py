@@ -70,6 +70,7 @@ class Layer(object):
         self.weights = weights
         self.numEpochs = len(self.weights)
         self.shape = self.weights[0].shape
+        self.filterSize = self.shape[1]
         self.allowedPlottings = []
         self.plottingsToDo = []
         self.layerType = None
@@ -187,7 +188,6 @@ class FeedForwardLayer(Layer):
     
     def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate):
         super(FeedForwardLayer, self).__init__(weights, name, namePath, isPlottingDomainLog)
-        self.filterSize = self.shape[1]
         self.numFilters = self.shape[0]
         assert weights[0].shape[0] == self.numFilters, "dim not correct"
         assert weights[0].shape[1] == self.filterSize, "dim not correct"
@@ -210,7 +210,6 @@ class Conv1DLayer(Layer):
 
     def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate):
         super(Conv1DLayer, self).__init__(weights, name, namePath, isPlottingDomainLog)
-        self.filterSize = self.shape[1]
         self.numFilters = self.shape[0]
         assert weights[0].shape[0] == self.numFilters, "dim not correct"
         assert weights[0].shape[1] == self.filterSize, "dim not correct"
@@ -297,7 +296,7 @@ class Plotter(object):
                         self.plot1DGraph(axs, i, j, timeArray, plotableWeight[filterNum], j)
                         self.setGraphYAxisLable(axs, i, j, 'filter.' + "%02d" % (filterNum+1,))
                 
-            plotId = '_epoch' + str(self.epochRangeToPlotPerColumn[epochRangeIdx]) + '_' + self.layer.domain + '_dimIdx' + str(self.layer.dimInputIdx) + '_all'
+            plotId = '_epoch' + str(self.epochRangeToPlotPerColumn[epochRangeIdx]) + '_' + self.layer.domain + '_dimIdx' + str(self.layer.dimInputIdx) + '_filterLength=' + str(self.layer.filterSize) + '_all'
             self.savePlot(plt, plotId)
             self.setPlotTitle(plt, plotId)
 
@@ -343,8 +342,9 @@ class Plotter(object):
         fig.colorbar(im, cax=cbar_ax)
         
         numDomain = '_log_applied' if(self.layer.isPlottingDomainLog and self.layer.domain == 'freq') else ''
+
         plt.suptitle(self.title + '_' + self.layer.domain + '_for_epoch_' + '_'.join(str(x) for x in self.epochRangeToPlotPerColumn) + numDomain, fontsize=self.titleFontSize, y=self.titleYPosition)
-        plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_heat_map_' + self.layer.domain + '_' + mode + numDomain)
+        plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_heat_map_' + self.layer.domain + '_' + mode + numDomain + '_filterLength=' + str(self.layer.filterSize))
 
     def setGraphXAxisLable(self, axs, axsRowIdx, axsColIdx, label):
         axs[axsRowIdx][axsColIdx].set_xlabel(label) 
