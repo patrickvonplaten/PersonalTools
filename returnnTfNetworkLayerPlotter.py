@@ -3,11 +3,10 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from scipy.signal import find_peaks
 import os
 import sys
 import ipdb 
-
-
 
 class ReturnnLayerPlotter(object):
 
@@ -18,16 +17,16 @@ class ReturnnLayerPlotter(object):
         self.nameOfLayerPath = nameOfLayer.replace('/','_')
         self.plottingConfigs = plottingConfigs
         self.numEpochs = numEpochs
-        self.epochRangeToPlotPerColumn = [self.numEpochs + int(x) + 1 if int(x) < 0 else int(x) for x in self.plottingConfigs['plotRange']]
+        self.epochRangeToPlot = [self.numEpochs + int(x) + 1 if int(x) < 0 else int(x) for x in self.plottingConfigs['plotRange']]
         self.reverse = self.plottingConfigs['reverse']
         self.layerType = self.plottingConfigs['layerType']
         self.weights = self.loadWeights()
         self.layer = self.getLayer()
-        self.plotter = Plotter(self.pathToAnalysisDir, self.plottingConfigs, self.layer, self.epochRangeToPlotPerColumn)
+        self.plotter = Plotter(self.pathToAnalysisDir, self.plottingConfigs, self.layer, self.epochRangeToPlot)
 
     def loadWeights(self):
         weights = []
-        for i in self.epochRangeToPlotPerColumn:
+        for i in self.epochRangeToPlot:
             epochWeight = np.load(os.path.join(self.pathToWeights, self.nameOfLayerPath + '_epoch' + str(i) + '_MMF.npy'))
             if(self.reverse):
                 epochWeight = np.flip(epochWeight, axis=1)
@@ -183,6 +182,46 @@ class ProcessedWeights(object):
             self.permutation = x.argmax(axis=1).argsort()
         return x[self.permutation] 
 
+class Peaks(object):
+
+    def __init__(self, fourierWeights):
+        self.fourierWeights = fourierWeights
+        self.filterFunctions = {
+                'narrowBand': self.filterNarrowBandFilters,
+                'band': self.filterBandFilters,
+                'cleanPeaks': self.filterCleanPeaks,
+                'dirtyPeaks': self.filterDirtyPeaks
+        }
+
+    def getPeaks(self, epoch, filterFunctionString, dimInputIdx):
+        filterWeights = self.fourierWeights[epoch][dimInputIdx]
+        assert filterFunctionString in self.filterFunctions, '{} does not exist'.format(filterFunctionString)
+        filterFn = self.filterFunctions[filterFunctionString]
+        allPeaks = []
+        for filterWeight in filterWeights:
+            maxVal = np.max(filterWeight)
+            peaks = filterFn(filterWeight, maxVal)
+            allPeaks += self.transformToTuples(peaks, filterWeight)
+        return sorted(allPeaks)
+        
+    def filterNarrowBandFilters(self, filterWeight, maxVal):
+        peaks,_ = find_peaks(filterWeight, height=max(0.8*maxVal, 10), distance=200)
+        return peaks if len(peaks) == 1 else []
+
+    def filterBandFilters(self, filterWeight, maxVal):
+        peaks,_ = find_peaks(filterWeight, height=max(0.95*maxVal, 8), distance=400)
+        return peaks if len(peaks) == 1 else []
+
+    def filterCleanPeaks(self, filterWeight, maxVal):
+        peaks,_ = find_peaks(filterWeight, height=max(0.5*maxVal, 8), distance=400)
+        return peaks
+
+    def filterDirtyPeaks(self, filterWeight, maxVal):
+        peaks,_ = find_peaks(filterWeight, height=max(0.3*maxVal, 5), distance=400)
+        return peaks
+
+    def transformToTuples(self, peaks, filterWeight):
+        return [ (peak, filterWeight[peak]) for peak in peaks ]
 
 class FeedForwardLayer(Layer):
     
@@ -206,6 +245,7 @@ class FeedForwardLayer(Layer):
     def getPlotableSorted2DWeights(self):
         return self.processedWeights.getPlotableSorted2DWeights()
 
+
 class Conv1DLayer(Layer):
 
     def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate):
@@ -213,10 +253,11 @@ class Conv1DLayer(Layer):
         self.numFilters = self.shape[0]
         assert weights[0].shape[0] == self.numFilters, "dim not correct"
         assert weights[0].shape[1] == self.filterSize, "dim not correct"
-        self.addToAllowedPlottings(['1DWeightsSimpleAll','1DWeightsSimpleDetail','2DWeightsHeat'])
+        self.addToAllowedPlottings(['1DWeightsSimpleAll','2DFilterStats','2DWeightsHeat'])
         self.setLayerType(type(self).__name__)
         self.createPlottingsToDo(wishedPlottings)
         self.processedWeights = ProcessedWeights(self.weights, self.filterSize, isPlottingDomainLog, self.dimInput, doPaddedFourierTransform, sampleRate)
+        self.peaks = Peaks(self.processedWeights.plotableWeightsFreq)
         self.channelUsedForPermutation = 0 
 
     def getPlotable1DWeights(self):
@@ -227,6 +268,9 @@ class Conv1DLayer(Layer):
 
     def getPlotableSorted2DWeights(self):
         return self.processedWeights.getPlotableSorted2DWeights()
+
+    def getPeaks(self, epoch, filterFn):
+        return self.peaks.getPeaks(epoch, filterFn)
 
 class Conv2DLayer(Layer):
     
@@ -247,12 +291,12 @@ class Conv2DLayer(Layer):
         
 class Plotter(object):
 
-    def __init__(self, pathToAnalysisDir, plottingConfigs, layer, epochRangeToPlotPerColumn):
+    def __init__(self, pathToAnalysisDir, plottingConfigs, layer, epochRangeToPlot):
         self.layer = layer
         self.pathToAnalysisDir = pathToAnalysisDir
         self.plottingConfigs = plottingConfigs
         self.colors = self.plottingConfigs['colors']
-        self.epochRangeToPlotPerColumn = epochRangeToPlotPerColumn
+        self.epochRangeToPlot = epochRangeToPlot
         self.samplesPerRow = self.plottingConfigs['samplesPerRow']
         self.samplesPerColumn = int(self.plottingConfigs['samplesPerColumn']) if int(self.plottingConfigs['samplesPerColumn']) > 0 else None
         self.figSize = self.plottingConfigs['figSize']
@@ -267,8 +311,9 @@ class Plotter(object):
                 self.layer.setDimInputIdx(inputDimIdx)
                 if('1DWeightsSimpleAll' in self.layer.plottingsToDo):
                     self.plot1DSimpleWeightsAll()
-                if('1DWeightsSimpleDetail' in self.layer.plottingsToDo):
-                    self.plot1DSimpleWeightsDetail()
+            if('2DFilterStats' in self.layer.plottingsToDo):
+                if(self.layer.domain == 'freq'):
+                    self.plot2DFilterStats()
             if('2DWeightsHeat' in self.layer.plottingsToDo):
                 if(self.layer.domain == 'time'):
                     self.plot2DHeatWeights('unsorted')
@@ -277,6 +322,25 @@ class Plotter(object):
                     self.plot2DHeatWeights('unsorted')
             if('3DWeightsHeat' in self.layer.plottingsToDo):
                  self.plot3DHeatWeights()
+
+    def plot2DFilterStats(self):
+        assert self.plottingConfigs['pad'], 'Fourier weights should be padded!'
+        filterFunctionsToPlot = len(self.plottingConfigs['filterFunctions'])
+
+        fig, axs = plt.subplots(filterFunctionsToPlot, 1, figsize=self.figSize, sharex=True, sharey=True)
+
+        for epochIdx, epoch in enumerate(self.epochRangeToPlot):
+            for filterFunctionIdx, filterFunction in enumerate(self.plottingConfigs['filterFunctions']):
+                peaksToPlot = self.layer.peaks.getPeaks(epochIdx, filterFunction, self.layer.dimInputIdx)
+                xAxisValues = [ x[0] for x in peaksToPlot ]
+                yAxisValues = [ x[1] for x in peaksToPlot ]
+                axs[filterFunctionIdx].plot(xAxisValues, yAxisValues, 'ro')
+                axs[filterFunctionIdx].grid(b=True)
+
+            plotId = '_epoch' + str(epoch) + '_dimIdx' + str(self.layer.dimInputIdx) + '_filterLength=' + str(self.layer.filterSize) + '_stats'
+            self.savePlot(plt, plotId)
+            self.setPlotTitle(plt, plotId)
+
          
     def plot1DSimpleWeightsAll(self):
         assert 'samplesPerRow' in self.plottingConfigs, 'Needs to give the attribute samplesPerRow'
@@ -296,7 +360,7 @@ class Plotter(object):
                         self.plot1DGraph(axs, i, j, timeArray, plotableWeight[filterNum], j)
                         self.setGraphYAxisLable(axs, i, j, 'filter.' + "%02d" % (filterNum+1,))
                 
-            plotId = '_epoch' + str(self.epochRangeToPlotPerColumn[epochRangeIdx]) + '_' + self.layer.domain + '_dimIdx' + str(self.layer.dimInputIdx) + '_filterLength=' + str(self.layer.filterSize) + '_all'
+            plotId = '_epoch' + str(self.epochRangeToPlot[epochRangeIdx]) + '_' + self.layer.domain + '_dimIdx' + str(self.layer.dimInputIdx) + '_filterLength=' + str(self.layer.filterSize) + '_all'
             self.savePlot(plt, plotId)
             self.setPlotTitle(plt, plotId)
 
@@ -313,7 +377,7 @@ class Plotter(object):
     def plot2DHeatWeights(self, mode):
         assert mode in ['sorted','unsorted'], "mode has to be sorted or unsorted"
         
-        fig, axs = plt.subplots(self.layer.dimInput, len(self.epochRangeToPlotPerColumn), figsize=self.figSize, sharex=True, sharey=True)
+        fig, axs = plt.subplots(self.layer.dimInput, len(self.epochRangeToPlot), figsize=self.figSize, sharex=True, sharey=True)
 
         if(self.layer.dimInput == 1 and not isinstance(axs, np.ndarray)):
             axs = [[axs]]
@@ -332,7 +396,7 @@ class Plotter(object):
             for dimInputIdx, plotableWeightPerDim in enumerate(plotableWeight): 
                 im = axs[dimInputIdx][epochRangeIdx].imshow(plotableWeightPerDim, origin='lower', aspect='auto', cmap=self.plottingConfigs['cmap'])
                 axs[dimInputIdx][epochRangeIdx].set_ylabel(self.layer.domain + '_for_channel_' + str(dimInputIdx))
-                axs[dimInputIdx][epochRangeIdx].set_xlabel('filterIdx_' + mode + '_for epoch' + '_' + '%03d' % (self.epochRangeToPlotPerColumn[epochRangeIdx],))
+                axs[dimInputIdx][epochRangeIdx].set_xlabel('filterIdx_' + mode + '_for epoch' + '_' + '%03d' % (self.epochRangeToPlot[epochRangeIdx],))
 
         fig.subplots_adjust(hspace=0)
         fig.subplots_adjust(right=0.8)
@@ -343,7 +407,7 @@ class Plotter(object):
         
         numDomain = '_log_applied' if(self.layer.isPlottingDomainLog and self.layer.domain == 'freq') else ''
 
-        plt.suptitle(self.title + '_' + self.layer.domain + '_for_epoch_' + '_'.join(str(x) for x in self.epochRangeToPlotPerColumn) + numDomain, fontsize=self.titleFontSize, y=self.titleYPosition)
+        plt.suptitle(self.title + '_' + self.layer.domain + '_for_epoch_' + '_'.join(str(x) for x in self.epochRangeToPlot) + numDomain, fontsize=self.titleFontSize, y=self.titleYPosition)
         plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_heat_map_' + self.layer.domain + '_' + mode + numDomain + '_filterLength=' + str(self.layer.filterSize))
 
     def setGraphXAxisLable(self, axs, axsRowIdx, axsColIdx, label):
@@ -362,9 +426,9 @@ class Plotter(object):
 
 #        TODO:Make it work!
         for plotIdx in range(int(self.layer.numFilters/self.samplesPerRow)):
-            fig, axs = plt.subplots(self.samplesPerRow, len(self.epochRangeToPlotPerColumn), figsize=self.figSize) 
+            fig, axs = plt.subplots(self.samplesPerRow, len(self.epochRangeToPlot), figsize=self.figSize) 
             
-            for epochRangeIdx, epoch in enumerate(self.epochRangeToPlotPerColumn):
+            for epochRangeIdx, epoch in enumerate(self.epochRangeToPlot):
                 for i in range(self.samplesPerRow):
                     filterNum = self.samplesPerRow*plotIdx + i
                     axs[i][epochRangeIdx].plot(timeArray, plotableWeights[epoch-1][filterNum],self.colors[i])

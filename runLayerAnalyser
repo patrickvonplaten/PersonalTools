@@ -24,10 +24,11 @@ if __name__ == "__main__":
     Decide which plotting type is wanted. Make a list by choesing of '1D','1Dd','2D',3Dh' with 
     '1D' = weights, time plotting for all filters on one plot for all epochs
     '1Dd' = weights, time plotting over specified epochs for all filters in multiple plots defined by other configurations
+    'Stat' = 2D filter stats in freq domain are plotted
     '2D' = filter, weights plotting with values shown in heat mapping
     '3D' = for 2D filters only. filter's first dimension, weights plotting with values shown in heat mapping over multiple plots for all filter's second dimension.
     Default is 'all' meaning that all possible plots for this layer are plotted. 
-    """, default='1D,1Dd,2D,3Dh')
+    """, default='1D,1Dd,2D,3Dh,Stat')
     parser.add_argument('--c',help='define colors used for matplotlib colors for 1D plots. Make sure that num of colors is equal to samplesPerRow', default='c,b,r,g')
     parser.add_argument('--cmap',help='define colormap theme used for 2D Heat Map for conv layers.' , default='hot')
     parser.add_argument('--spr',help='samples to be plotted per row in plot',default=4)
@@ -38,6 +39,7 @@ if __name__ == "__main__":
     parser.add_argument('--d',help='domains that should be plotted: "time" and/or "freq"',default='time,freq')
     parser.add_argument('--init',help='if layer is initialized with previously trained network, give the path to the MMF weight file. Obviously, dimension of weights have to match', default=None)
     parser.add_argument('--sampRate',help='if "pad" is added weight array is padded to fit sample rate, which can be set here.', default=16000)
+    parser.add_argument('--filt',help='states which filter functions for freq peaks should be used when doing the "Stat" plot', default='narrowBand,band,cleanPeaks,dirtyPeaks')
     parser.add_argument('-rf', action='store_true', default=False, help='If "-rf" is added then weight directory will be deleted and recreated') 
     parser.add_argument('-rev', action='store_true', default=False, help='If "-rev" is added then weights array will be flippend for every kernel') 
     parser.add_argument('-log', action='store_true', default=False, help='If "-log" is added then plots of conv layer will be plotted in log scale') 
@@ -46,7 +48,7 @@ if __name__ == "__main__":
 
     args = vars(parser.parse_args())
 
-    parseStringToList = ['type','d','c','r']
+    parseStringToList = ['type','d','c','r','filt']
     for arg in parseStringToList:
         args[arg] = args[arg].split(',')
 
@@ -58,6 +60,7 @@ if __name__ == "__main__":
         '1D': '1DWeightsSimpleAll',
         '1Dd': '1DWeightsSimpleDetail',
         '2D': '2DWeightsHeat',
+        'Stat': '2DFilterStats',
         '3Dh': '3DWeightsHeat'
     }
 
@@ -75,7 +78,8 @@ if __name__ == "__main__":
         'layerType': args['layType'],
         'reverse': args['rev'],
         'pad': args['pad'],
-        'sampleRate': args['sampRate']
+        'sampleRate': args['sampRate'],
+        'filterFunctions': args['filt']
     }
 
     bashCommand = "pwd"
@@ -93,7 +97,8 @@ if __name__ == "__main__":
     layerNameForInitWeight = None
     layerName = args['layer']
     pathLayerName = layerName.replace('/','_')
-    pathToAnalysisDir = pathToStepDir + '/analysis_' + pathLayerName + '_layer'
+    pathToAnalysisDir = pathToStepDir + '/analysis_' + pathLayerName + '_layer_dummy'
+#    pathToAnalysisDir = pathToStepDir + '/analysis_' + pathLayerName + '_layer'
     pathToSaveWeightsDir = pathToAnalysisDir + '/weights_' + pathLayerName + '_layer'
 
     doSaveWeights = args['rf']
