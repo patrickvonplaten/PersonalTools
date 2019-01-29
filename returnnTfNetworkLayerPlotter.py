@@ -358,15 +358,15 @@ class Plotter(object):
             axs[barIdx].set_xticks(range(0,maxFreq, 1000))
         else: 
             intervalLen = int((maxFreq+1)/barAccuracy)
-            yAxisValues = self.countElemsInInterval(peaksToPlot, maxFreq, intervalLen)
-            xAxisValues = range(1,len(yAxisValues)+1)
+            values = self.countElemsInInterval(peaksToPlot, maxFreq, intervalLen)
+#            xAxisValues = range(1,len(yAxisValues)+1)
             print('barIdx:{}'.format(barIdx))
             print('filterFunctionIdx:{}'.format(filterFunctionIdx))
-            print(yAxisValues)
+#            print(yAxisValues)
 #            axs[barIdx][filterFunctionIdx].bar(xAxisValues, yAxisValues, color='red')
-            axs[barIdx].bar(xAxisValues, yAxisValues, color='red')
+            axs[barIdx].hist(values, barAccuracy, color='red')
 #            axs[barIdx][filterFunctionIdx].set_xticks(range(0,maxFreq+1, intervalLen))
-            axs[barIdx].set_xticks(range(0,maxFreq+1, intervalLen))
+#            axs[barIdx].set_xticks(range(0,maxFreq+1, intervalLen))
 
     def countElemsInInterval(self, peaksToPlot, maxFreq, intervalLen):
         histogram,_ = np.histogram(peaksToPlot, bins=range(0, maxFreq+1, intervalLen))
