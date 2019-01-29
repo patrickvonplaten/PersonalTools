@@ -193,7 +193,8 @@ class Peaks(object):
                 'cleanPeaks': self.filterCleanPeaks,
                 'dirtyPeaks': self.filterDirtyPeaks
         }
-        self.barAccuracies = [1,10,2]
+#        self.barAccuracies = [1,10,2]
+        self.barAccuracies = [10,2]
 
     def getPeaks(self, epoch, filterFunctionString, dimInputIdx):
         filterWeights = self.fourierWeights[epoch][dimInputIdx]
