@@ -193,8 +193,7 @@ class Peaks(object):
                 'cleanPeaks': self.filterCleanPeaks,
                 'dirtyPeaks': self.filterDirtyPeaks
         }
-#        self.barAccuracies = [1,10,2]
-        self.barAccuracies = [10,2]
+        self.barAccuracies = [1,10,2]
 
     def getPeaks(self, epoch, filterFunctionString, dimInputIdx):
         filterWeights = self.fourierWeights[epoch][dimInputIdx]
@@ -331,8 +330,8 @@ class Plotter(object):
         filterFunctionsToPlot = len(self.plottingConfigs['filterFunctions'])
         numBarPlots = len(self.layer.peaks.barAccuracies)
 
-#        fig, axs = plt.subplots(numBarPlots, filterFunctionsToPlot, figsize=self.figSize)
-        fig, axs = plt.subplots(numBarPlots, figsize=self.figSize, tight_layout=True)
+        fig, axs = plt.subplots(numBarPlots, filterFunctionsToPlot, figsize=self.figSize)
+#        fig, axs = plt.subplots(numBarPlots, figsize=self.figSize, tight_layout=True)
 
 
         for epochIdx, epoch in enumerate(self.epochRangeToPlot):
@@ -349,32 +348,15 @@ class Plotter(object):
         if(barAccuracy == 1):
             xAxisValues = [ x[0] for x in peaksToPlot ]
             yAxisValues = [ x[1] for x in peaksToPlot ]
-#            axs[barIdx][filterFunctionIdx].plot(xAxisValues, yAxisValues, 'ro')
-#            axs[barIdx].plot(xAxisValues, yAxisValues, 'ro')
-#            axs[barIdx][filterFunctionIdx].grid(b=True)
-            axs[barIdx].grid(b=True)
-#            axs[barIdx][filterFunctionIdx].set_xticks(range(0,maxFreq, 1000))
-            axs[barIdx].set_xticks(range(0,maxFreq, 1000))
+            axs[barIdx][filterFunctionIdx].plot(xAxisValues, yAxisValues, 'ro')
+            axs[barIdx][filterFunctionIdx].grid(b=True)
+            axs[barIdx][filterFunctionIdx].set_xticks(range(0,maxFreq, int((maxFreq+1)/10)))
         else: 
             intervalLen = int((maxFreq+1)/barAccuracy)
             values = [ val[0] for val in peaksToPlot ]
-            ipdb.set_trace()
-            print(values)
-#            xAxisValues = range(1,len(yAxisValues)+1)
-            print('barIdx:{}'.format(barIdx))
-            print('filterFunctionIdx:{}'.format(filterFunctionIdx))
-#            print(yAxisValues)
-#            axs[barIdx][filterFunctionIdx].bar(xAxisValues, yAxisValues, color='red', width='0.1')
-            axs[barIdx].hist(values, bins=barAccuracy, color='red')
-#            axs[barIdx][filterFunctionIdx].set_xticks(range(0,maxFreq+1, intervalLen))
-#            axs[barIdx].set_xticks(range(0,maxFreq+1, intervalLen))
+            axs[barIdx][filterFunctionIdx].hist(values, bins=barAccuracy)
+            axs[barIdx][filterFunctionIdx].set_xticks(range(0,maxFreq+1, intervalLen))
 
-    def countElemsInInterval(self, peaksToPlot, maxFreq, intervalLen):
-        histogram,_ = np.histogram(peaksToPlot, bins=range(0, maxFreq+1, intervalLen))
-        return histogram
-
-
-         
     def plot1DSimpleWeightsAll(self):
         assert 'samplesPerRow' in self.plottingConfigs, 'Needs to give the attribute samplesPerRow'
 
