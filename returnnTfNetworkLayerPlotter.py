@@ -62,7 +62,7 @@ class ReturnnLayerPlotter(object):
 class Layer(object):
     """This is an abstract class"""
 
-    def __init__(self, weights, name, namePath, isPlottingDomainLog):
+    def __init__(self, weights, name, namePath, isPlottingDomainLog, sampleRate):
         self.isPlottingDomainLog = isPlottingDomainLog
         self.name = name
         self.namePath = namePath
@@ -76,6 +76,7 @@ class Layer(object):
         self.dimInputIdx = 0
         self.dimInput = 1
         self.domain = None
+        self.sampleRate = sampleRate
     
     def setDomain(self, domain):
         self.domain = domain
@@ -192,6 +193,7 @@ class Peaks(object):
                 'cleanPeaks': self.filterCleanPeaks,
                 'dirtyPeaks': self.filterDirtyPeaks
         }
+        self.barAccuracies = [1,10,2]
 
     def getPeaks(self, epoch, filterFunctionString, dimInputIdx):
         filterWeights = self.fourierWeights[epoch][dimInputIdx]
@@ -249,7 +251,7 @@ class FeedForwardLayer(Layer):
 class Conv1DLayer(Layer):
 
     def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate):
-        super(Conv1DLayer, self).__init__(weights, name, namePath, isPlottingDomainLog)
+        super(Conv1DLayer, self).__init__(weights, name, namePath, isPlottingDomainLog, sampleRate)
         self.numFilters = self.shape[0]
         assert weights[0].shape[0] == self.numFilters, "dim not correct"
         assert weights[0].shape[1] == self.filterSize, "dim not correct"
@@ -326,20 +328,39 @@ class Plotter(object):
     def plot2DFilterStats(self):
         assert self.plottingConfigs['pad'], 'Fourier weights should be padded!'
         filterFunctionsToPlot = len(self.plottingConfigs['filterFunctions'])
+        numBarPlots = len(self.layer.peaks.barAccuracies)
 
-        fig, axs = plt.subplots(filterFunctionsToPlot, 1, figsize=self.figSize, sharex=True, sharey=True)
+        fig, axs = plt.subplots(numBarPlots, filterFunctionsToPlot, figsize=self.figSize, sharex=True, sharey=True)
+        ipdb.set_trace()
 
         for epochIdx, epoch in enumerate(self.epochRangeToPlot):
             for filterFunctionIdx, filterFunction in enumerate(self.plottingConfigs['filterFunctions']):
                 peaksToPlot = self.layer.peaks.getPeaks(epochIdx, filterFunction, self.layer.dimInputIdx)
-                xAxisValues = [ x[0] for x in peaksToPlot ]
-                yAxisValues = [ x[1] for x in peaksToPlot ]
-                axs[filterFunctionIdx].plot(xAxisValues, yAxisValues, 'ro')
-                axs[filterFunctionIdx].grid(b=True)
+                for barIdx, barAccuracy in enumerate(self.layer.peaks.barAccuracies):
+                    self.plot2DStat(axs, barIdx, filterFunctionIdx, peaksToPlot, barAccuracy)
 
             plotId = '_epoch' + str(epoch) + '_dimIdx' + str(self.layer.dimInputIdx) + '_filterLength=' + str(self.layer.filterSize) + '_stats'
             self.savePlot(plt, plotId)
             self.setPlotTitle(plt, plotId)
+
+    def plot2DStat(self, axs, barIdx, filterFunctionIdx, peaksToPlot, barAccuracy):
+        if(barAccuracy == 1):
+            xAxisValues = [ x[0] for x in peaksToPlot ]
+            yAxisValues = [ x[1] for x in peaksToPlot ]
+            axs[barIdx][filterFunctionIdx].plot(xAxisValues, yAxisValues, 'ro')
+            axs[barIdx][filterFunctionIdx].grid(b=True)
+        else: 
+            xAxisValues = range(barAccuracy)
+            maxFreq = int((self.layer.sampleRate+1)/2)
+            intervalLen = int((maxFreq+1)/barAccuracy)
+            yAxisValues = self.countElemsInInterval(peaksToPlot, maxFreq, intervalLen)
+            axs[barIdx][filterFunctionIdx].set_xticks(range(1,maxFreq+1, intervalLen))
+            axs[barIdx][filterFunctionIdx].bar(xAxisValues, yAxisValues)
+
+    def countElemsInInterval(self, peaksToPlot, maxFreq, intervalLen):
+        histogram,_ = np.histogram(peaksToPlot, bins=range(0, maxFreq+1, intervalLen))
+        return histogram
+
 
          
     def plot1DSimpleWeightsAll(self):
