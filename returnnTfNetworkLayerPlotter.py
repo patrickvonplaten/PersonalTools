@@ -355,7 +355,7 @@ class Plotter(object):
             intervalLen = int((maxFreq+1)/barAccuracy)
             yAxisValues = self.countElemsInInterval(peaksToPlot, maxFreq, intervalLen)
 #            ipdb.set_trace()
-            axs[barIdx][filterFunctionIdx].bar(xAxisValues, yAxisValues)
+            axs[barIdx][filterFunctionIdx].bar(xAxisValues, yAxisValues, alpha=0.4, color='b')
             axs[barIdx][filterFunctionIdx].set_xticks(range(0,maxFreq+1, intervalLen))
 
     def countElemsInInterval(self, peaksToPlot, maxFreq, intervalLen):
