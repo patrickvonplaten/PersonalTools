@@ -330,7 +330,7 @@ class Plotter(object):
         filterFunctionsToPlot = len(self.plottingConfigs['filterFunctions'])
         numBarPlots = len(self.layer.peaks.barAccuracies)
 
-        fig, axs = plt.subplots(numBarPlots, filterFunctionsToPlot, figsize=self.figSize, sharex=True, sharey=True)
+        fig, axs = plt.subplots(numBarPlots, filterFunctionsToPlot, figsize=self.figSize)
 
         for epochIdx, epoch in enumerate(self.epochRangeToPlot):
             for filterFunctionIdx, filterFunction in enumerate(self.plottingConfigs['filterFunctions']):
@@ -351,10 +351,10 @@ class Plotter(object):
             axs[barIdx][filterFunctionIdx].grid(b=True)
             axs[barIdx][filterFunctionIdx].set_xticks(range(0,maxFreq, 1000))
         else: 
-            xAxisValues = np.arange(barAccuracy)
             intervalLen = int((maxFreq+1)/barAccuracy)
             yAxisValues = self.countElemsInInterval(peaksToPlot, maxFreq, intervalLen)
 #            ipdb.set_trace()
+            xAxisValues = np.arange(len(yAxisValues))
             axs[barIdx][filterFunctionIdx].bar(xAxisValues, yAxisValues, alpha=0.4, color='b')
             axs[barIdx][filterFunctionIdx].set_xticks(range(0,maxFreq+1, intervalLen))
 
