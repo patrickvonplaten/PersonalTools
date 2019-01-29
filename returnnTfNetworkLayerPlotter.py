@@ -331,7 +331,6 @@ class Plotter(object):
         numBarPlots = len(self.layer.peaks.barAccuracies)
 
         fig, axs = plt.subplots(numBarPlots, filterFunctionsToPlot, figsize=self.figSize, sharex=True, sharey=True)
-        ipdb.set_trace()
 
         for epochIdx, epoch in enumerate(self.epochRangeToPlot):
             for filterFunctionIdx, filterFunction in enumerate(self.plottingConfigs['filterFunctions']):
@@ -344,18 +343,20 @@ class Plotter(object):
             self.setPlotTitle(plt, plotId)
 
     def plot2DStat(self, axs, barIdx, filterFunctionIdx, peaksToPlot, barAccuracy):
+        maxFreq = int((self.layer.sampleRate+1)/2)
         if(barAccuracy == 1):
             xAxisValues = [ x[0] for x in peaksToPlot ]
             yAxisValues = [ x[1] for x in peaksToPlot ]
             axs[barIdx][filterFunctionIdx].plot(xAxisValues, yAxisValues, 'ro')
             axs[barIdx][filterFunctionIdx].grid(b=True)
+            axs[barIdx][filterFunctionIdx].set_xticks(range(0,maxFreq, 1000))
         else: 
-            xAxisValues = range(barAccuracy)
-            maxFreq = int((self.layer.sampleRate+1)/2)
+            xAxisValues = np.arange(barAccuracy)
             intervalLen = int((maxFreq+1)/barAccuracy)
             yAxisValues = self.countElemsInInterval(peaksToPlot, maxFreq, intervalLen)
-            axs[barIdx][filterFunctionIdx].set_xticks(range(1,maxFreq+1, intervalLen))
+#            ipdb.set_trace()
             axs[barIdx][filterFunctionIdx].bar(xAxisValues, yAxisValues)
+            axs[barIdx][filterFunctionIdx].set_xticks(range(0,maxFreq+1, intervalLen))
 
     def countElemsInInterval(self, peaksToPlot, maxFreq, intervalLen):
         histogram,_ = np.histogram(peaksToPlot, bins=range(0, maxFreq+1, intervalLen))
