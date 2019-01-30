@@ -196,7 +196,7 @@ class Peaks(object):
         self.barAccuracies = [1,10,2]
 
     def getPeaks(self, epoch, filterFunctionString, dimInputIdx):
-        filterWeights = self.fourierWeights[epoch][dimInputIdx]
+        filterWeights = self.fourierWeights[dimInputIdx][epoch]
         assert filterFunctionString in self.filterFunctions, '{} does not exist'.format(filterFunctionString)
         filterFn = self.filterFunctions[filterFunctionString]
         allPeaks = []
@@ -207,19 +207,19 @@ class Peaks(object):
         return sorted(allPeaks)
         
     def filterNarrowBandFilters(self, filterWeight, maxVal):
-        peaks,_ = find_peaks(filterWeight, height=max(0.8*maxVal, 10), distance=200)
+        peaks,_ = find_peaks(filterWeight, height=max(0.75*maxVal, 10), distance=200)
         return peaks if len(peaks) == 1 else []
 
     def filterBandFilters(self, filterWeight, maxVal):
-        peaks,_ = find_peaks(filterWeight, height=max(0.95*maxVal, 8), distance=400)
+        peaks,_ = find_peaks(filterWeight, height=max(0.90*maxVal, 8), distance=400)
         return peaks if len(peaks) == 1 else []
 
     def filterCleanPeaks(self, filterWeight, maxVal):
-        peaks,_ = find_peaks(filterWeight, height=max(0.5*maxVal, 8), distance=400)
+        peaks,_ = find_peaks(filterWeight, height=max(0.6*maxVal, 8), distance=400)
         return peaks
 
     def filterDirtyPeaks(self, filterWeight, maxVal):
-        peaks,_ = find_peaks(filterWeight, height=max(0.3*maxVal, 5), distance=400)
+        peaks,_ = find_peaks(filterWeight, height=max(0.6*maxVal, 5), distance=400)
         return peaks
 
     def transformToTuples(self, peaks, filterWeight):
@@ -338,12 +338,12 @@ class Plotter(object):
             for filterFunctionIdx, filterFunction in enumerate(self.plottingConfigs['filterFunctions']):
                 peaksToPlot = self.layer.peaks.getPeaks(epochIdx, filterFunction, self.layer.dimInputIdx)
                 for barIdx, barAccuracy in enumerate(self.layer.peaks.barAccuracies):
-                    self.plot2DStat(axs, barIdx, filterFunctionIdx, peaksToPlot, barAccuracy)
+                    self.plot2DStat(axs, barIdx, filterFunctionIdx, peaksToPlot, barAccuracy, filterFunction)
             plotId = '_epoch' + str(epoch) + '_dimIdx' + str(self.layer.dimInputIdx) + '_filterLength=' + str(self.layer.filterSize) + '_stats'
             self.savePlot(plt, plotId)
             self.setPlotTitle(plt, plotId)
 
-    def plot2DStat(self, axs, barIdx, filterFunctionIdx, peaksToPlot, barAccuracy):
+    def plot2DStat(self, axs, barIdx, filterFunctionIdx, peaksToPlot, barAccuracy, filterFunction):
         maxFreq = int((self.layer.sampleRate+1)/2)
         if(barAccuracy == 1):
             xAxisValues = [ x[0] for x in peaksToPlot ]
@@ -351,11 +351,16 @@ class Plotter(object):
             axs[barIdx][filterFunctionIdx].plot(xAxisValues, yAxisValues, 'ro')
             axs[barIdx][filterFunctionIdx].grid(b=True)
             axs[barIdx][filterFunctionIdx].set_xticks(range(0,maxFreq, int((maxFreq+1)/10)))
+            axs[barIdx][filterFunctionIdx].set_xlabel('Frequency')
+            axs[barIdx][filterFunctionIdx].set_ylabel('Magnitude')
+            axs[barIdx][filterFunctionIdx].set_title(filterFunction)
         else: 
             intervalLen = int((maxFreq+1)/barAccuracy)
             values = [ val[0] for val in peaksToPlot ]
             axs[barIdx][filterFunctionIdx].hist(values, bins=barAccuracy)
             axs[barIdx][filterFunctionIdx].set_xticks(range(0,maxFreq+1, intervalLen))
+            axs[barIdx][filterFunctionIdx].set_xlabel('Frequency')
+            axs[barIdx][filterFunctionIdx].set_ylabel('Count')
 
     def plot1DSimpleWeightsAll(self):
         assert 'samplesPerRow' in self.plottingConfigs, 'Needs to give the attribute samplesPerRow'

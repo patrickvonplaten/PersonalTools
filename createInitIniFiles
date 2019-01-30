@@ -1,0 +1,150 @@
+#!/usr/bin/env python3
+import sys
+import ipdb
+import os
+import subprocess
+
+SectionLines = {
+    'ModelSet': [],
+    'Layer': [],
+    'NeuralNetwork': [],
+    'FrameLevelTraining': [],
+    'FrameLevelTrainingPretrain': []
+}
+
+def getCurrentPath():
+    process = subprocess.Popen('pwd'.split(), stdout=subprocess.PIPE)
+    output, _ = process.communicate()
+    return output[:-1].decode('utf-8')
+
+def readInPretrainFrameLevelTrainingPath(pretrainFrameLevelTrainingPath):
+    pretrainFrameLevelTrainingFile = open(pretrainFrameLevelTrainingPath)
+    pretrainFrameLevelTrainingFileLines = pretrainFrameLevelTrainingFile.readlines()
+    pretrainFrameLevelTrainingFile.close()
+    for line in pretrainFrameLevelTrainingFileLines:
+        SectionLines['FrameLevelTrainingPretrain'].append(line)
+
+def addInitialisationToIniFile(pretrainFileIdx, iniFilePath, pretrainIniFileNameFormat):
+    with open(iniFilePath, "r+", encoding = "utf-8") as fineTuneFile:
+        fineTuneFile.seek(0, os.SEEK_END)
+        #and the penultimate one
+        pos = fineTuneFile.tell() - 1
+        while pos > 0 and fineTuneFile.read(1) != "\n":
+            pos -= 1
+            fineTuneFile.seek(pos, os.SEEK_SET)
+        if pos > 0:
+            fineTuneFile.seek(pos, os.SEEK_SET)
+            fineTuneFile.truncate()
+    with open(iniFilePath, "a") as fineTuneFile:
+        fineTuneFile.write('\nINITIALISATION = htefiles/' + pretrainIniFileNameFormat.format(pretrainFileIdx)+ '\n')
+
+def checkInput(pretrainIniFileLayerNum):
+    layerNumPrev = 0
+    for layerNum in pretrainIniFileLayerNum: 
+        assert layerNumPrev <= layerNum, 'pretrainIniFiles should have increasing layer numbers'
+
+def readInFineTuneIniFile(fineTuneIniFilePath):
+
+    fineTuneIniFile = open(fineTuneIniFilePath)
+    fineTuneIniFileLines = fineTuneIniFile.readlines()
+    fineTuneIniFile.close()
+
+    keyword = None
+    for line in fineTuneIniFileLines:
+        if(line[0] == '#'):
+            continue
+        if(isKeyword(line)):
+            keyword = updateKeyword(line)
+        if(keyword == 'Layer'):
+            SectionLines[keyword][-1].append(line)
+        else:
+            SectionLines[keyword].append(line)
+
+def isKeyword(line):
+    return '[' in line.strip()
+
+def updateKeyword(line):
+    keyword = getKeyword(line)
+    if(keyword == 'Layer'):
+        SectionLines[keyword].append([])
+    return keyword
+
+def getKeyword(line):
+    return line.strip().split(':')[0].replace('[','').replace(']','')
+
+def writeModelSetSection(pretrainFile):
+    for line in SectionLines['ModelSet']:
+        pretrainFile.write(line)
+
+def writeLayerSection(pretrainFile, numLayersPretrainFile, outputLayerName):
+    outputLayerFeatureElemLines = []
+    isWritten = False
+    for layerIdx in range(numLayersPretrainFile): 
+        layerName = None
+        for line in SectionLines['Layer'][layerIdx]:
+            pretrainFile.write(line)
+            layerName = updateLayerName(layerName, line)
+    for line in SectionLines['Layer'][numLayersPretrainFile]:
+        if('FeatureElement' in line or 'FeatureMixture.Num' in line):
+            outputLayerFeatureElemLines.append(line)
+    for line in SectionLines['Layer'][-1]:
+        if('[Layer' in line): 
+            pretrainFile.write('[Layer:' + outputLayerName + ']\n')
+        elif('FeatureElement' in line or 'FeatureMixture.Num' in line):
+            if(not isWritten):
+                for line in outputLayerFeatureElemLines:
+                    pretrainFile.write(line)
+            isWritten=True
+        else:
+            pretrainFile.write(line)
+
+def updateLayerName(layerName, line):
+    if('[Layer' in line):
+        return line.strip().split(':')[-1].replace(']','')
+    return layerName
+
+def writeNeuralNetworkSection(pretrainFile, modelName, outputLayerName, numLayersPretrainFile):
+    for lineIdx, line in enumerate(SectionLines['NeuralNetwork']):
+        if('[NeuralNetwork' in line):
+            pretrainFile.write(line.strip().split(':')[0] + ':' + modelName + ']\n')
+        elif(lineIdx < numLayersPretrainFile + 1):
+            pretrainFile.write(line)
+        elif(lineIdx == numLayersPretrainFile + 1):
+            pretrainFile.write('Layer' + str(lineIdx + 1) + '.Name = ' + outputLayerName + '\n')
+
+def writeFrameLevelTrainingSection(pretrainFile, idxPretrainFile, pretrainIniFileNameFormat):
+    for line in SectionLines['FrameLevelTrainingPretrain']:
+        if('INITIALISATION =' in line):
+            initialisation = 'RANDOM:HHED' if idxPretrainFile == 1 else 'htefiles/' + pretrainIniFileNameFormat.format(idxPretrainFile - 1)
+            pretrainFile.write('INITIALISATION = ' + initialisation + '\n')
+        else: 
+            pretrainFile.write(line)
+        
+def createPretrainFile(idxPretrainFile, numLayersPretrainFile, pretrainIniFileNameFormat):
+    print('...creating {} Pretrain File with {} layers'.format(idxPretrainFile, numLayersPretrainFile))
+    with open(os.path.join(curPath, pretrainIniFileNameFormat.format(idxPretrainFile)), 'w+') as pretrainFile: 
+        outputLayerName = 'layerOutPretrain' + str(idxPretrainFile)
+        modelName = 'Pretrain' + str(idxPretrainFile)
+        writeModelSetSection(pretrainFile)
+        writeLayerSection(pretrainFile, numLayersPretrainFile, outputLayerName)
+        writeNeuralNetworkSection(pretrainFile, modelName, outputLayerName, numLayersPretrainFile)
+        writeFrameLevelTrainingSection(pretrainFile, idxPretrainFile, pretrainIniFileNameFormat)
+
+if __name__ == "__main__":
+    curPath = getCurrentPath()
+    fineTuneIniFilePath= os.path.join(curPath ,sys.argv[1])
+    pretrainFrameLevelTrainingPath=os.path.join(curPath, sys.argv[2])
+    fineTuneIniFileName=fineTuneIniFilePath.split('/')[-1].split('.ini')[0]
+    pretrainIniFileLayerNum=[]
+    pretrainIniFileNameFormat = fineTuneIniFileName + '.pretrain{}.ini'
+
+    for pretrainIniFileArgv in sys.argv[3:]:
+        pretrainIniFileLayerNum.append(int(pretrainIniFileArgv))
+    numPretainIniFiles = len(pretrainIniFileLayerNum)
+
+    checkInput(pretrainIniFileLayerNum)
+    readInFineTuneIniFile(fineTuneIniFilePath)
+    readInPretrainFrameLevelTrainingPath(pretrainFrameLevelTrainingPath)
+    for idxPretrainFile, numLayersPretrainFile in enumerate(pretrainIniFileLayerNum):
+        createPretrainFile(idxPretrainFile+1, numLayersPretrainFile, pretrainIniFileNameFormat)
+    addInitialisationToIniFile(numPretainIniFiles, fineTuneIniFilePath, pretrainIniFileNameFormat)

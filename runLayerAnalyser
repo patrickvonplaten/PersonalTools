@@ -97,8 +97,7 @@ if __name__ == "__main__":
     layerNameForInitWeight = None
     layerName = args['layer']
     pathLayerName = layerName.replace('/','_')
-    pathToAnalysisDir = pathToStepDir + '/analysis_' + pathLayerName + '_layer_dummy'
-#    pathToAnalysisDir = pathToStepDir + '/analysis_' + pathLayerName + '_layer'
+    pathToAnalysisDir = pathToStepDir + '/analysis_' + pathLayerName + '_layer'
     pathToSaveWeightsDir = pathToAnalysisDir + '/weights_' + pathLayerName + '_layer'
 
     doSaveWeights = args['rf']
