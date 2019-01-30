@@ -87,6 +87,7 @@ if __name__ == "__main__":
     output, error = process.communicate()
     pathToStepDir = output[:-1].decode('utf-8')
     modelDirRelativ = args['hmm']
+    analysisPathExtension = '.' + '.'.join(modelDirRelativ.split('.')[1:])
 
     if(not not args['dir']):
         pathToStepDir = args['dir']
@@ -97,7 +98,7 @@ if __name__ == "__main__":
     layerNameForInitWeight = None
     layerName = args['layer']
     pathLayerName = layerName.replace('/','_')
-    pathToAnalysisDir = pathToStepDir + '/analysis_' + pathLayerName + '_layer'
+    pathToAnalysisDir = pathToStepDir + '/analysis_' + pathLayerName + '_layer' + analysisPathExtension
     pathToSaveWeightsDir = pathToAnalysisDir + '/weights_' + pathLayerName + '_layer'
 
     doSaveWeights = args['rf']
