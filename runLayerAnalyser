@@ -17,7 +17,7 @@ if __name__ == "__main__":
     """)
 
     parser.add_argument('--dir', help='Step directory where returnn network files are stored. If nothing is provided, the current directory will be used as the step directory', default=None)
-    parser.add_argument('--layer', help='Name of layer as defined in returnn config file that is to be plotted,f.e.: "CNNLayer1_kernels, FCLayer1_weight"', default='CNNLayer1_kernels')
+    parser.add_argument('--layer', help='Name of layer as defined in returnn config file that is to be plotted,f.e.: "CNNLayer1_kernels, FCLayer1_weight, CNNLayer1Filter2_kernels"', default='CNNLayer1_kernels')
     parser.add_argument('--hmm', help='relativ path to hmm folder which contains the weights to be plotted', default='hmm0')
     parser.add_argument('--title', help='Title for all plots, that should be specified by the user', default='plot')
     parser.add_argument('--type', help="""
