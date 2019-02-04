@@ -40,6 +40,7 @@ if __name__ == "__main__":
     parser.add_argument('--init',help='if layer is initialized with previously trained network, give the path to the MMF weight file. Obviously, dimension of weights have to match', default=None)
     parser.add_argument('--sampRate',help='if "pad" is added weight array is padded to fit sample rate, which can be set here.', default=16000)
     parser.add_argument('--filt',help='states which filter functions for freq peaks should be used when doing the "Stat" plot', default='narrowBand,band,cleanPeaks,dirtyPeaks')
+    parser.add_argument('--multi',help='gives number of parallel filter streams that are used', default=1)
     parser.add_argument('-rf', action='store_true', default=False, help='If "-rf" is added then weight directory will be deleted and recreated') 
     parser.add_argument('-rev', action='store_true', default=False, help='If "-rev" is added then weights array will be flippend for every kernel') 
     parser.add_argument('-log', action='store_true', default=False, help='If "-log" is added then plots of conv layer will be plotted in log scale') 
@@ -83,6 +84,7 @@ if __name__ == "__main__":
     }
 
     bashCommand = "pwd"
+    numFilterStreams = int(args['multi'])
     process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
     output, error = process.communicate()
     pathToStepDir = output[:-1].decode('utf-8')
@@ -119,13 +121,17 @@ if __name__ == "__main__":
 
     if(doSaveWeights or not doWeightExist):
         from returnnTfNetworkLayerSaver import LayerWeightSaver
-        lws = LayerWeightSaver(modelDir, pathToSaveWeightsDir, layerName, pathToInitWeight)
+        for filterStreamIdx in range(1, numFilterStreams + 1):
+            layerNameExt = layerName.format(filterStreamIdx) if numFilterStreams > 1 else layerName
+            lws = LayerWeightSaver(modelDir, pathToSaveWeightsDir, layerNameExt, pathToInitWeight)
         numEpochs = lws.numEpochs
     else:
         print("Weights already exist. If you want to delete old weights and save new weights, add '-rf' to the command.")
-        numEpochs = len([x for x in os.listdir(pathToSaveWeightsDir)]) 
+        numEpochs = int(len([x for x in os.listdir(pathToSaveWeightsDir)])/numFilterStreams)
 
-    layerPlotter = ReturnnLayerPlotter(pathToAnalysisDir, pathToSaveWeightsDir, layerName, plottingConfigs, numEpochs)
-    layerPlotter.run()
+    for filterStreamIdx in range(1, numFilterStreams + 1):
+        layerNameExt = layerName.format(filterStreamIdx) if numFilterStreams > 1 else layerName
+        layerPlotter = ReturnnLayerPlotter(pathToAnalysisDir, pathToSaveWeightsDir, layerNameExt, plottingConfigs, numEpochs)
+        layerPlotter.run()
 
 
