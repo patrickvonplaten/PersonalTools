@@ -114,8 +114,8 @@ def writeNeuralNetworkSection(pretrainFile, modelName, outputLayerName, numLayer
 
 def writeFrameLevelTrainingSection(pretrainFile, idxPretrainFile, pretrainIniFileNameFormat):
     for line in SectionLines['FrameLevelTrainingPretrain']:
-        if('INITIALISATION =' in line):
-            initialisation = 'RANDOM:HHED' if idxPretrainFile == 1 else 'htefiles/' + pretrainIniFileNameFormat.format(idxPretrainFile - 1)
+        if('INITIALISATION =' in line and idxPretrainFile > 1):
+            initialisation = 'htefiles/' + pretrainIniFileNameFormat.format(idxPretrainFile - 1)
             pretrainFile.write('INITIALISATION = ' + initialisation + '\n')
         else: 
             pretrainFile.write(line)
