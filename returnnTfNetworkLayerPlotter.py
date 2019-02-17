@@ -414,9 +414,9 @@ class Plotter(object):
         elif(mode == 'unsorted'):
             plotableWeights = self.layer.getPlotable2DWeights()
 
-        for dimInputIdx, plotableWeightPerDim in enumerate(plotableWeights): 
-            for epochRangeIdx, plotableWeightPerEpoch in enumerate(plotableWeightPerDim):
-                im = axs[dimInputIdx][epochRangeIdx].imshow(plotableWeightPerEpoch, origin='lower', aspect='auto', cmap=self.plottingConfigs['cmap'])
+        for epochRangeIdx, plotableWeightPerEpoch in enumerate(plotableWeights):
+            for dimInputIdx, plotableWeightPerDim in enumerate(plotableWeightPerEpoch): 
+                im = axs[dimInputIdx][epochRangeIdx].imshow(plotableWeightPerDim, origin='lower', aspect='auto', cmap=self.plottingConfigs['cmap'])
                 axs[dimInputIdx][epochRangeIdx].set_ylabel(self.layer.domain + '_for_channel_' + str(dimInputIdx))
                 axs[dimInputIdx][epochRangeIdx].set_xlabel('filterIdx_' + mode + '_for epoch' + '_' + '%03d' % (self.epochRangeToPlot[epochRangeIdx],))
 
