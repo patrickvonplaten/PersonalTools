@@ -151,11 +151,19 @@ class ProcessedWeights(object):
         self.plotableWeights = [[] for x in range(self.dimInput)]
         numEpochs = len(weights)
         for epochIdx in range(numEpochs):
-            weightsShape = weights[epochIdx].shape
-            weightsToAppend = weights[epochIdx].reshape(weightsShape[0], self.filterSize, self.dimInput)
+            weightsToAppend = self.extractWeightToAppend(weights[epochIdx], weights[epochIdx].shape[0])
             for i in range(self.dimInput):
                 self.plotableWeights[i].append(weightsToAppend[:,:,i])
         return self.plotableWeights
+
+    def extractWeightToAppend(self, weights, numFilters):
+        weightsToAppend = np.zeros((numFilters, self.filterSize, self.dimInput))
+        for i in range(numFilters): 
+            for j in range(self.filterSize):
+                for k in range(self.dimInput):
+                    filterDimIdx = self.dimInput * j + k
+                    weightsToAppend[i,j,k] = weights[i, filterDimIdx]
+        return weightsToAppend
 
     def getFrequencyDomain(self):
         timeAxis = np.arange(self.filterSize/self.timeFreqRatio)
