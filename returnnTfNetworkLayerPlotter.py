@@ -42,14 +42,15 @@ class ReturnnLayerPlotter(object):
         isPlottingDomainLog = self.plottingConfigs['log']
         doPaddedFourierTransform = self.plottingConfigs['pad']
         sampleRate = self.plottingConfigs['sampleRate']
+        dimInput = int(self.plottingConfigs['dimInput'])
 
         if(isLayerWeightComposedOf1Subarrays):
             return FeedForwardLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate)
         elif(isLayerWeightComposedOf2Subarrays):
             if(self.layerType == 'conv'):
-                return Conv1DLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate) 
+                return Conv1DLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate, dimInput) 
             elif(self.layerType == 'feed'):
-                return FeedForwardLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog)
+                return FeedForwardLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, dimInput)
 
         elif(isLayerWeightComposedOf3Subarrays):
             return Conv2DLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings) 
@@ -62,19 +63,19 @@ class ReturnnLayerPlotter(object):
 class Layer(object):
     """This is an abstract class"""
 
-    def __init__(self, weights, name, namePath, isPlottingDomainLog, sampleRate):
+    def __init__(self, weights, name, namePath, isPlottingDomainLog, sampleRate, dimInput):
         self.isPlottingDomainLog = isPlottingDomainLog
         self.name = name
         self.namePath = namePath
         self.weights = weights
+        self.dimInput = dimInput
         self.numEpochs = len(self.weights)
         self.shape = self.weights[0].shape
-        self.filterSize = self.shape[1]
+        self.filterSize = int(self.shape[1]/self.dimInput)
         self.allowedPlottings = []
         self.plottingsToDo = []
         self.layerType = None
         self.dimInputIdx = 0
-        self.dimInput = 1
         self.domain = None
         self.sampleRate = sampleRate
     
@@ -147,9 +148,13 @@ class ProcessedWeights(object):
         return transformedList
 
     def create_plotable_weights(self, weights):
-        self.plotableWeights = []
-        for i in range(self.dimInput):
-            self.plotableWeights.append([x for x in weights])
+        self.plotableWeights = [[] for x in range(self.dimInput)]
+        numEpochs = len(weights)
+        for epochIdx in range(numEpochs):
+            weightsShape = weights[epochIdx].shape
+            weightsToAppend = weights[epochIdx].reshape(weightsShape[0], self.filterSize, self.dimInput)
+            for i in range(self.dimInput):
+                self.plotableWeights[i].append(weightsToAppend[:,:,i])
         return self.plotableWeights
 
     def getFrequencyDomain(self):
@@ -227,11 +232,10 @@ class Peaks(object):
 
 class FeedForwardLayer(Layer):
     
-    def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate):
-        super(FeedForwardLayer, self).__init__(weights, name, namePath, isPlottingDomainLog)
+    def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate, dimInput):
+        super(FeedForwardLayer, self).__init__(weights, name, namePath, isPlottingDomainLog, dimInput)
         self.numFilters = self.shape[0]
         assert weights[0].shape[0] == self.numFilters, "dim not correct"
-        assert weights[0].shape[1] == self.filterSize, "dim not correct"
         self.addToAllowedPlottings(['1DWeightsSimpleAll','2DWeightsHeat'])
         self.setLayerType(type(self).__name__)
         self.createPlottingsToDo(wishedPlottings)
@@ -250,11 +254,10 @@ class FeedForwardLayer(Layer):
 
 class Conv1DLayer(Layer):
 
-    def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate):
-        super(Conv1DLayer, self).__init__(weights, name, namePath, isPlottingDomainLog, sampleRate)
+    def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate, dimInput):
+        super(Conv1DLayer, self).__init__(weights, name, namePath, isPlottingDomainLog, sampleRate, dimInput)
         self.numFilters = self.shape[0]
         assert weights[0].shape[0] == self.numFilters, "dim not correct"
-        assert weights[0].shape[1] == self.filterSize, "dim not correct"
         self.addToAllowedPlottings(['1DWeightsSimpleAll','2DFilterStats','2DWeightsHeat'])
         self.setLayerType(type(self).__name__)
         self.createPlottingsToDo(wishedPlottings)
@@ -370,7 +373,6 @@ class Plotter(object):
         if(not self.samplesPerColumn):
             self.samplesPerColumn = int(np.ceil(numFilters/float(self.samplesPerRow)))
 
-        
         for epochRangeIdx, plotableWeight in enumerate(plotableWeights):
             fig, axs = plt.subplots(self.samplesPerColumn, self.samplesPerRow, figsize=self.plottingConfigs['figSize'])
             for i in range(self.samplesPerColumn):
@@ -412,9 +414,9 @@ class Plotter(object):
         elif(mode == 'unsorted'):
             plotableWeights = self.layer.getPlotable2DWeights()
 
-        for epochRangeIdx, plotableWeight in enumerate(plotableWeights):
-            for dimInputIdx, plotableWeightPerDim in enumerate(plotableWeight): 
-                im = axs[dimInputIdx][epochRangeIdx].imshow(plotableWeightPerDim, origin='lower', aspect='auto', cmap=self.plottingConfigs['cmap'])
+        for dimInputIdx, plotableWeightPerDim in enumerate(plotableWeights): 
+            for epochRangeIdx, plotableWeightPerEpoch in enumerate(plotableWeightPerDim):
+                im = axs[dimInputIdx][epochRangeIdx].imshow(plotableWeightPerEpoch, origin='lower', aspect='auto', cmap=self.plottingConfigs['cmap'])
                 axs[dimInputIdx][epochRangeIdx].set_ylabel(self.layer.domain + '_for_channel_' + str(dimInputIdx))
                 axs[dimInputIdx][epochRangeIdx].set_xlabel('filterIdx_' + mode + '_for epoch' + '_' + '%03d' % (self.epochRangeToPlot[epochRangeIdx],))
 
