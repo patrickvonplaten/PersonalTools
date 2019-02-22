@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+import argparse
+import random
+import os
+import subprocess
+import glob
+import ipdb
+
+parser = argparse.ArgumentParser(description="Generate Random HypParameters")
+parser.add_argument('--dir')
+parser.add_argument('--lr', default='0.00007,0.0003')
+parser.add_argument('--wd', default='0.04,0.06')
+parser.add_argument('--upClip', default='0.2,0.6')
+parser.add_argument('--cv1Sc1', default='0.4,0.6')
+parser.add_argument('--cv1Sc2', default='0.55,0.75')
+parser.add_argument('--cv1Sc3', default='0.7,0.9')
+parser.add_argument('--cv2Sc1', default='0.5,0.7')
+parser.add_argument('--cv2Sc2', default='0.6,0.8')
+parser.add_argument('--cv2Sc3', default='0.7,0.9')
+args = vars(parser.parse_args())
+
+argDict1 = {
+    'lr': 'LEARNRATE =',
+    'wd': 'WEIGHTDECAY =',
+    'upClip': 'UPDATECLIP =',
+}
+argDict2 = {
+    'cv1Sc1': 'CNNLayer1Filter1_kernels',
+    'cv1Sc2': 'CNNLayer1Filter2_kernels',
+    'cv1Sc3': 'CNNLayer1Filter3_kernels',
+    'cv2Sc1': 'CNNLayer2Filter1_kernels',
+    'cv2Sc2': 'CNNLayer2Filter2_kernels',
+    'cv2Sc3': 'CNNLayer2Filter3_kernels',
+}
+
+def getCurrentPath():
+    process = subprocess.Popen('pwd'.split(), stdout=subprocess.PIPE)
+    output, _ = process.communicate()
+    return output[:-1].decode('utf-8')
+
+def getRandomNum(argString):
+    argStringItems = argString.split(',')
+    return random.uniform(float(argStringItems[0]), float(argStringItems[1]))
+
+def createIniTextWithRandom(iniFilePath):
+    with open(iniFilePath,'r') as iniFile:
+        lines = iniFile.readlines()
+        text = []
+        for line in lines:
+            for arg in args:
+                if(arg in argDict1 and argDict1[arg] in line):
+                    line = argDict1[arg] + ' {:.6f}\n'.format(getRandomNum(args[arg]))
+                    break;
+                if(arg in argDict2 and argDict2[arg] in line):
+                    lineItems = line.split(argDict2[arg])
+                    firstItem = lineItems[-1].split(':')[0] + ':{:.6f}'.format(getRandomNum(args[arg]))
+                    secondItem = ';'.join(lineItems[-1].split(';')[1:])
+                    line = lineItems[0] + argDict2[arg] + firstItem + ';' + secondItem
+            text.append(line)
+        return text
+
+def writeIniFile(text, filePath):
+    with open(filePath, 'w') as newIniFile:
+        for line in text:
+            newIniFile.write(line)
+
+pathToDir = os.path.join(getCurrentPath(),args['dir'])
+iniFiles = glob.glob(pathToDir + "/*.ini")
+assert len(iniFiles) == 1
+iniFileName = iniFiles[0].split('/')[-1]
+iniFilePath = iniFiles[0]
+for trainDir in glob.glob(os.path.join(pathToDir, '*/')):
+    trainDirPath = os.path.join(trainDir, 'htefiles', iniFileName)
+    if(os.path.isfile(trainDirPath)):
+        os.system('mv {} {}'.format(trainDirPath, trainDirPath + '.prev'))
+    writeIniFile(createIniTextWithRandom(iniFilePath),trainDirPath)
+
+                    
+
+        
+        
+
+

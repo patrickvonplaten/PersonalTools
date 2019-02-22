@@ -46,7 +46,6 @@ if __name__ == "__main__":
     parser.add_argument('-rev', action='store_true', default=False, help='If "-rev" is added then weights array will be flippend for every kernel') 
     parser.add_argument('-log', action='store_true', default=False, help='If "-log" is added then plots of conv layer will be plotted in log scale') 
     parser.add_argument('-pad', action='store_true', default=False, help='If "-pad" is added then fourier transform is done on zero padded array so that it fits with the sampling rate') 
-    parser.add_argument('-a', action='store_true', default=False, help='If "-a" is added then the network structure will be loaded and shown') 
 
     args = vars(parser.parse_args())
 
