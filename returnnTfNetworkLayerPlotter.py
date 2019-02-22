@@ -341,11 +341,8 @@ class Plotter(object):
         filterFunctionsToPlot = len(self.plottingConfigs['filterFunctions'])
         numBarPlots = len(self.layer.peaks.barAccuracies)
 
-        fig, axs = plt.subplots(numBarPlots, filterFunctionsToPlot, figsize=self.figSize)
-#        fig, axs = plt.subplots(numBarPlots, figsize=self.figSize, tight_layout=True)
-
-
         for epochIdx, epoch in enumerate(self.epochRangeToPlot):
+            fig, axs = plt.subplots(numBarPlots, filterFunctionsToPlot, figsize=self.figSize)
             for filterFunctionIdx, filterFunction in enumerate(self.plottingConfigs['filterFunctions']):
                 peaksToPlot = self.layer.peaks.getPeaks(epochIdx, filterFunction, self.layer.dimInputIdx)
                 for barIdx, barAccuracy in enumerate(self.layer.peaks.barAccuracies):
@@ -422,9 +419,14 @@ class Plotter(object):
         elif(mode == 'unsorted'):
             plotableWeights = self.layer.getPlotable2DWeights()
 
+        maxVal = 0 
+        minVal = float('inf')
         for epochRangeIdx, plotableWeightPerEpoch in enumerate(plotableWeights):
             for dimInputIdx, plotableWeightPerDim in enumerate(plotableWeightPerEpoch): 
+                maxVal = np.max(plotableWeightPerDim) if np.max(plotableWeightPerDim) > maxVal else maxVal
+                minVal = np.min(plotableWeightPerDim) if np.min(plotableWeightPerDim) < minVal else minVal
                 im = axs[dimInputIdx][epochRangeIdx].imshow(plotableWeightPerDim, origin='lower', aspect='auto', cmap=self.plottingConfigs['cmap'])
+                im.set_clim(minVal, maxVal)
                 axs[dimInputIdx][epochRangeIdx].set_ylabel(self.layer.domain + '_for_channel_' + str(dimInputIdx))
                 axs[dimInputIdx][epochRangeIdx].set_xlabel('filterIdx_' + mode + '_for epoch' + '_' + '%03d' % (self.epochRangeToPlot[epochRangeIdx],))
 
