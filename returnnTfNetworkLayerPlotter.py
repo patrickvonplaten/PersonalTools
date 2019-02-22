@@ -419,14 +419,14 @@ class Plotter(object):
         elif(mode == 'unsorted'):
             plotableWeights = self.layer.getPlotable2DWeights()
 
-        maxVal = 0 
-        minVal = float('inf')
         for epochRangeIdx, plotableWeightPerEpoch in enumerate(plotableWeights):
             for dimInputIdx, plotableWeightPerDim in enumerate(plotableWeightPerEpoch): 
                 maxVal = np.max(plotableWeightPerDim) if np.max(plotableWeightPerDim) > maxVal else maxVal
                 minVal = np.min(plotableWeightPerDim) if np.min(plotableWeightPerDim) < minVal else minVal
                 im = axs[dimInputIdx][epochRangeIdx].imshow(plotableWeightPerDim, origin='lower', aspect='auto', cmap=self.plottingConfigs['cmap'])
-                im.set_clim(minVal, maxVal)
+                colorInterval = self.plottingConfigs['colorInterval']
+                if(colorInterval):
+                    im.set_clim(colorInterval[0], colorInterval[1])
                 axs[dimInputIdx][epochRangeIdx].set_ylabel(self.layer.domain + '_for_channel_' + str(dimInputIdx))
                 axs[dimInputIdx][epochRangeIdx].set_xlabel('filterIdx_' + mode + '_for epoch' + '_' + '%03d' % (self.epochRangeToPlot[epochRangeIdx],))
 

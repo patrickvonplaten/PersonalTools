@@ -42,6 +42,7 @@ if __name__ == "__main__":
     parser.add_argument('--sampRate',help='if "pad" is added weight array is padded to fit sample rate, which can be set here.', default=16000)
     parser.add_argument('--filt',help='states which filter functions for freq peaks should be used when doing the "Stat" plot', default='narrowBand,band,cleanPeaks,dirtyPeaks')
     parser.add_argument('--multi',help='gives number of parallel filter streams that are used', default=1)
+    parser.add_argument('--colI',help='states MxMn color to make plots identical', default=None)
     parser.add_argument('-rf', action='store_true', default=False, help='If "-rf" is added then weight directory will be deleted and recreated') 
     parser.add_argument('-rev', action='store_true', default=False, help='If "-rev" is added then weights array will be flippend for every kernel') 
     parser.add_argument('-log', action='store_true', default=False, help='If "-log" is added then plots of conv layer will be plotted in log scale') 
@@ -53,7 +54,7 @@ if __name__ == "__main__":
     for arg in parseStringToList:
         args[arg] = args[arg].split(',')
 
-    parseToIntTuple = ['figS']
+    parseToIntTuple = ['figS','MxMn']
     for arg in parseToIntTuple:
         args[arg] = tuple([int(x) for x in args[arg].split(',')])
 
@@ -81,7 +82,8 @@ if __name__ == "__main__":
         'pad': args['pad'],
         'sampleRate': args['sampRate'],
         'filterFunctions': args['filt'],
-        'dimInput': args['dim']
+        'dimInput': args['dim'],
+        'colorInterval': args['colI']
     }
 
     bashCommand = "pwd"
