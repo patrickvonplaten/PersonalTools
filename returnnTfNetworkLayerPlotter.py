@@ -421,8 +421,6 @@ class Plotter(object):
 
         for epochRangeIdx, plotableWeightPerEpoch in enumerate(plotableWeights):
             for dimInputIdx, plotableWeightPerDim in enumerate(plotableWeightPerEpoch): 
-                maxVal = np.max(plotableWeightPerDim) if np.max(plotableWeightPerDim) > maxVal else maxVal
-                minVal = np.min(plotableWeightPerDim) if np.min(plotableWeightPerDim) < minVal else minVal
                 im = axs[dimInputIdx][epochRangeIdx].imshow(plotableWeightPerDim, origin='lower', aspect='auto', cmap=self.plottingConfigs['cmap'])
                 colorInterval = self.plottingConfigs['colorInterval']
                 if(colorInterval):
