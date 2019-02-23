@@ -25,7 +25,7 @@ def readInLogFileToDict(logFilePath, methodType, statType):
         intervalLength = int(numElements/NUM_OF_DATAPOINTS)
         for line in lines:
             processLine(line, dictToPlot, layerCounter, methodType, statType, intervalLength)
-    return dictToPlot 
+    return dictToPlot, intervalLength
 
 def processLine(line, dictToPlot, layerCounter, methodType, statType, intervalLength):
     for layerName in LAYERS_TO_EXTRACT:
@@ -53,22 +53,27 @@ def extractValueFromLine(line, methodType, statType):
 def extractFeature(line, feature):
     return line.split(feature + ':')[-1].split(' ')[0]
     
-def plotStatForAllLayers(dictToPlot, methodType, statType, ax):
+def plotStatForAllLayers(dictToPlot, methodType, statType, ax, intervalLength):
     for layer in dictToPlot.keys():
         values = dictToPlot[layer]
         ax.plot(np.arange(len(values)), np.asarray(values), label=layer)
     ax.set_title(methodType + ' - ' + statType)
+    ax.set_xlabel('Forward Pass Idx with one unit being {} Forward Passes'.format(intervalLength))
+    if(methodType in ['Mean','Var']):
+        ax.set_ylabel('Average {}'.format(methodType))
+    elif(methodType in ['Max','Min']):
+        ax.set_ylabel(methodType)
     ax.legend()
 
 curPath = getCurrentPath()
-statsToPlot = ['Mean','Var','Min','Max']
+statsToPlot = ['Mean','Var','Max']
 methodsToPlot = ['Forward']
 fig, axs = plt.subplots(len(statsToPlot), len(methodsToPlot), figsize=(10,30))
 if(len(methodsToPlot) == 1):
     axs = [ [ax] for ax in axs ]
 for i in range(len(statsToPlot)):
     for j in range(len(methodsToPlot)):
-        dictToPlot = readInLogFileToDict(logFilePath, methodsToPlot[j], statsToPlot[i])
+        dictToPlot, intervalLength = readInLogFileToDict(logFilePath, methodsToPlot[j], statsToPlot[i])
 #        ipdb.set_trace()
-        plotStatForAllLayers(dictToPlot, methodsToPlot[j], statsToPlot[i], axs[i][j])
+        plotStatForAllLayers(dictToPlot, methodsToPlot[j], statsToPlot[i], axs[i][j], intervalLength)
 plt.savefig(curPath + '/' + plotPathToSave)
