@@ -40,9 +40,9 @@ def processLine(line, dictToPlot, layerCounter, methodType, statType, intervalLe
             if(methodType in ['Mean', 'Var']):
                 dictToPlot[layerName][-1] += value
             elif(methodType == 'Max'):
-                dictToPlot[layerName][-1] = max(dictToPlot[layerName], value)
+                dictToPlot[layerName][-1] = max(dictToPlot[layerName][-1], value)
             elif(methodType == 'Min'):
-                dictToPlot[layerName][-1] = min(dictToPlot[layerName], value)
+                dictToPlot[layerName][-1] = min(dictToPlot[layerName][-1], value)
             
 def extractValueFromLine(line, methodType, statType):
     line = line.strip()
@@ -68,5 +68,6 @@ if(len(methodsToPlot) == 1):
 for i in range(len(statsToPlot)):
     for j in range(len(methodsToPlot)):
         dictToPlot = readInLogFileToDict(logFilePath, methodsToPlot[j], statsToPlot[i])
+        ipdb.set_trace()
         plotStatForAllLayers(dictToPlot, methodsToPlot[j], statsToPlot[i], axs[i][j])
 plt.savefig(curPath + '/' + plotPathToSave)
