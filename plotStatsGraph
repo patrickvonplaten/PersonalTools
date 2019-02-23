@@ -5,7 +5,7 @@ import subprocess
 import matplotlib.pyplot as plt
 import matplotlib
 import ipdb
-NUM_OF_DATAPOINTS = 50
+NUM_OF_DATAPOINTS = 125
 LAYERS_TO_EXTRACT = ['CNNLayer1Filter50','CNNLayer2Filter50','CNNLayer1Filter200','CNNLayer2Filter200','CNNLayer1Filter400','CNNLayer2Filter400']
 
 logFilePath = sys.argv[1]
@@ -59,16 +59,16 @@ def plotStatForAllLayers(dictToPlot, methodType, statType, ax, intervalLength):
         ax.plot(np.arange(len(values)), np.asarray(values), label=layer)
     ax.set_title(methodType + ' - ' + statType)
     ax.set_xlabel('Forward Pass Idx with one unit being {} Forward Passes'.format(intervalLength))
-    if(methodType in ['Mean','Var']):
+    if(statType in ['Mean','Var']):
         ax.set_ylabel('Average {}'.format(methodType))
-    elif(methodType in ['Max','Min']):
+    elif(statType in ['Max','Min']):
         ax.set_ylabel(methodType)
     ax.legend()
 
 curPath = getCurrentPath()
 statsToPlot = ['Mean','Var','Max']
 methodsToPlot = ['Forward']
-fig, axs = plt.subplots(len(statsToPlot), len(methodsToPlot), figsize=(10,30))
+fig, axs = plt.subplots(len(statsToPlot), len(methodsToPlot), figsize=(20,30))
 if(len(methodsToPlot) == 1):
     axs = [ [ax] for ax in axs ]
 for i in range(len(statsToPlot)):
