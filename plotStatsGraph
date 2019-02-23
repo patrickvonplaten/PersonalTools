@@ -5,6 +5,7 @@ import subprocess
 import matplotlib.pyplot as plt
 import matplotlib
 import ipdb
+NUM_OF_DATAPOINTS = 50
 
 logFilePath = sys.argv[1]
 plotPathToSave = sys.argv[2]
@@ -16,18 +17,34 @@ def getCurrentPath():
 
 def readInLogFileToDict(logFilePath, methodType, statType):
     dictToPlot = {}
+    layerCounter = {}
     with open(logFilePath, 'r') as logFile:
         lines = logFile.readlines()
+        numElements = sum(statType in line for line in lines)
+        intervalLength = int(numElements/NUM_OF_DATAPOINTS)
         for line in lines:
-            if(methodType in line and statType in line):
-                layerName, value = processLine(line, methodType, statType)
-                if(layerName in dictToPlot):
-                    dictToPlot[layerName].append(float(value))
-                else:
-                    dictToPlot[layerName] = [float(value)]
+            processLine(line, dictToPlot, layerCounter, methodType, statType, intervalLength)
     return dictToPlot 
 
-def processLine(line, methodType, statType):
+def processLine(line, dictToPlot, layerCounter, methodType, statType, intervalLength):
+    if(methodType in line and statType in line):
+        layerName, value = extractValueFromLine(line, methodType, statType)
+        layerCounter[layerName] = layerCounter.get(layerName, 0) + 1
+        dictToPlot[layerName] = dictToPlot.get(layerName, [0])
+
+        if(layerCounter[layerName] % intervalLength == 0):
+            if(methodType in ['Mean', 'Var']):
+                dictToPlot[layerName][-1] = dictToPlot[layerName][-1]/float(intervalLength)
+            dictToPlot[layerName].append(value)
+        else:
+            if(methodType in ['Mean', 'Var']):
+                dictToPlot[layerName][-1] += value
+            elif(methodType == 'Max'):
+                dictToPlot[layerName][-1] = max(dictToPlot[layerName], value)
+            elif(methodType == 'Min'):
+                dictToPlot[layerName][-1] = min(dictToPlot[layerName], value)
+            
+def extractValueFromLine(line, methodType, statType):
     line = line.strip()
     layerName = extractFeature(line, methodType)
     value = extractFeature(line, statType)
@@ -45,7 +62,7 @@ def plotStatForAllLayers(dictToPlot, methodType, statType, ax):
 curPath = getCurrentPath()
 statsToPlot = ['Mean','Var','Min','Max']
 methodsToPlot = ['Forward']
-fig, axs = plt.subplots(len(statsToPlot), len(methodsToPlot))
+fig, axs = plt.subplots(len(statsToPlot), len(methodsToPlot), figsize=(30,10))
 if(len(methodsToPlot) == 1):
     axs = [ [ax] for ax in axs ]
 for i in range(len(statsToPlot)):
@@ -53,5 +70,3 @@ for i in range(len(statsToPlot)):
         dictToPlot = readInLogFileToDict(logFilePath, methodsToPlot[j], statsToPlot[i])
         plotStatForAllLayers(dictToPlot, methodsToPlot[j], statsToPlot[i], axs[i][j])
 plt.savefig(curPath + '/' + plotPathToSave)
-
-
