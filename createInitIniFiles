@@ -9,7 +9,8 @@ SectionLines = {
     'Layer': [],
     'NeuralNetwork': [],
     'FrameLevelTraining': [],
-    'FrameLevelTrainingPretrain': []
+    'FrameLevelTrainingPretrain': [],
+    'Other': []
 }
 
 def getCurrentPath():
@@ -57,6 +58,8 @@ def readInFineTuneIniFile(fineTuneIniFilePath):
             keyword = updateKeyword(line)
         if(keyword == 'Layer'):
             SectionLines[keyword][-1].append(line)
+        elif(keyword not in SectionLines):
+            SectionLines['Other'].append(line)
         else:
             SectionLines[keyword].append(line)
 
@@ -119,6 +122,10 @@ def writeFrameLevelTrainingSection(pretrainFile, idxPretrainFile, pretrainIniFil
             pretrainFile.write('INITIALISATION = ' + initialisation + '\n')
         else: 
             pretrainFile.write(line)
+
+def writeOtherSection(pretrainFile):
+    for line in SectionLines['Other']:
+        pretrainFile.write(line)
         
 def createPretrainFile(idxPretrainFile, numLayersPretrainFile, pretrainIniFileNameFormat):
     print('...creating {} Pretrain File with {} layers'.format(idxPretrainFile, numLayersPretrainFile))
@@ -126,6 +133,7 @@ def createPretrainFile(idxPretrainFile, numLayersPretrainFile, pretrainIniFileNa
         outputLayerName = 'layerOutPretrain' + str(idxPretrainFile)
         modelName = 'Pretrain' + str(idxPretrainFile)
         writeModelSetSection(pretrainFile)
+        writeOtherSection(pretrainFile)
         writeLayerSection(pretrainFile, numLayersPretrainFile, outputLayerName)
         writeNeuralNetworkSection(pretrainFile, modelName, outputLayerName, numLayersPretrainFile)
         writeFrameLevelTrainingSection(pretrainFile, idxPretrainFile, pretrainIniFileNameFormat)
