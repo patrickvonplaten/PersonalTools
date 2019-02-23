@@ -3,8 +3,10 @@ import sys
 import pyhtk
 import ipdb
 
-MMFFilePaths=sys.argv[1:]
-name = 'CNNLayer1_kernels'
+name = sys.argv[1]
+MMFFilePaths=sys.argv[2:]
+#name = 'CNNLayer1Filter50_kernels'
+#name = 'CNNLayer1_kernels'
 #name = 'FCLayer1_weight'
 
 def getWeights(layerName, hmmSet):

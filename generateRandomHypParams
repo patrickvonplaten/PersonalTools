@@ -11,9 +11,9 @@ parser.add_argument('--dir')
 parser.add_argument('--lr', default='0.00007,0.0003')
 parser.add_argument('--wd', default='0.04,0.06')
 parser.add_argument('--upClip', default='0.2,0.6')
-parser.add_argument('--cv1Sc1', default='0.4,0.6')
-parser.add_argument('--cv1Sc2', default='0.55,0.75')
-parser.add_argument('--cv1Sc3', default='0.7,0.9')
+parser.add_argument('--cv1Sc1', default='0.05,0.1')
+parser.add_argument('--cv1Sc2', default='0.25,0.35')
+parser.add_argument('--cv1Sc3', default='0.4,0.5')
 parser.add_argument('--cv2Sc1', default='0.5,0.7')
 parser.add_argument('--cv2Sc2', default='0.6,0.8')
 parser.add_argument('--cv2Sc3', default='0.7,0.9')
@@ -25,9 +25,9 @@ argDict1 = {
     'upClip': 'UPDATECLIP =',
 }
 argDict2 = {
-    'cv1Sc1': 'CNNLayer1Filter1_kernels',
-    'cv1Sc2': 'CNNLayer1Filter2_kernels',
-    'cv1Sc3': 'CNNLayer1Filter3_kernels',
+    'cv1Sc1': 'CNNLayer1Filter50_kernels',
+    'cv1Sc2': 'CNNLayer1Filter200_kernels',
+    'cv1Sc3': 'CNNLayer1Filter400_kernels',
     'cv2Sc1': 'CNNLayer2Filter1_kernels',
     'cv2Sc2': 'CNNLayer2Filter2_kernels',
     'cv2Sc3': 'CNNLayer2Filter3_kernels',

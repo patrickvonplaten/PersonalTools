@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+import sys
+import numpy as np 
+import subprocess
+import matplotlib.pyplot as plt
+import matplotlib
+import ipdb
+
+logFilePath = sys.argv[1]
+plotPathToSave = sys.argv[2]
+
+def getCurrentPath():
+    process = subprocess.Popen('pwd'.split(), stdout=subprocess.PIPE)
+    output, _ = process.communicate()
+    return output[:-1].decode('utf-8')
+
+def readInLogFileToDict(logFilePath, methodType, statType):
+    dictToPlot = {}
+    with open(logFilePath, 'r') as logFile:
+        lines = logFile.readlines()
+        for line in lines:
+            if(methodType in line and statType in line):
+                layerName, value = processLine(line, methodType, statType)
+                if(layerName in dictToPlot):
+                    dictToPlot[layerName].append(float(value))
+                else:
+                    dictToPlot[layerName] = [float(value)]
+    return dictToPlot 
+
+def processLine(line, methodType, statType):
+    line = line.strip()
+    layerName = extractFeature(line, methodType)
+    value = extractFeature(line, statType)
+    return layerName, value
+
+def extractFeature(line, feature):
+    return line.split(feature + ':')[-1].split(' ')[0]
+    
+def plotStatForAllLayers(dictToPlot, methodType, statType, ax):
+    for layer in dictToPlot.keys():
+        values = dictToPlot[layer]
+        ax.plot(np.arange(len(values)), np.asarray(values), label=layer)
+    ax.set_title(methodType + ' - ' + statType)
+
+curPath = getCurrentPath()
+statsToPlot = ['Mean','Var','Min','Max']
+methodsToPlot = ['Forward']
+fig, axs = plt.subplots(len(statsToPlot), len(methodsToPlot))
+if(len(methodsToPlot) == 1):
+    axs = [ [ax] for ax in axs ]
+for i in range(len(statsToPlot)):
+    for j in range(len(methodsToPlot)):
+        dictToPlot = readInLogFileToDict(logFilePath, methodsToPlot[j], statsToPlot[i])
+        plotStatForAllLayers(dictToPlot, methodsToPlot[j], statsToPlot[i], axs[i][j])
+plt.savefig(curPath + '/' + plotPathToSave)
+
+
