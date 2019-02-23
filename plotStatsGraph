@@ -54,21 +54,26 @@ def extractFeature(line, feature):
     return line.split(feature + ':')[-1].split(' ')[0]
     
 def plotStatForAllLayers(dictToPlot, methodType, statType, ax, intervalLength):
+    labelDict = {
+        'Forward': 'Layeroutput',
+        'Backward': 'Gradient'
+    }
     for layer in dictToPlot.keys():
         values = dictToPlot[layer]
         ax.plot(np.arange(len(values)), np.asarray(values), label=layer)
     ax.set_title(methodType + ' - ' + statType)
     ax.set_xlabel('Forward Pass Idx with one unit being {} Forward Passes'.format(intervalLength))
     if(statType in ['Mean','Var']):
-        ax.set_ylabel('Average {}'.format(methodType))
+        prefix = 'Average '
     elif(statType in ['Max','Min']):
-        ax.set_ylabel(methodType)
+        prefix = ''
+    ax.set_ylabel(prefix + '{} of {}'.format(statType, labelDict[methodType]))
     ax.legend()
 
 curPath = getCurrentPath()
 statsToPlot = ['Mean','Var','Max']
-methodsToPlot = ['Forward']
-fig, axs = plt.subplots(len(statsToPlot), len(methodsToPlot), figsize=(20,30))
+methodsToPlot = ['Forward', 'Backward']
+fig, axs = plt.subplots(len(statsToPlot), len(methodsToPlot), figsize=(30,30))
 if(len(methodsToPlot) == 1):
     axs = [ [ax] for ax in axs ]
 for i in range(len(statsToPlot)):
