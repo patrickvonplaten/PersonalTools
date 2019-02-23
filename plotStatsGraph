@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import ipdb
 NUM_OF_DATAPOINTS = 50
+LAYERS_TO_EXTRACT = ['CNNLayer1Filter50','CNNLayer2Filter50','CNNLayer1Filter200','CNNLayer2Filter200','CNNLayer1Filter400','CNNLayer2Filter400']
 
 logFilePath = sys.argv[1]
 plotPathToSave = sys.argv[2]
@@ -20,35 +21,34 @@ def readInLogFileToDict(logFilePath, methodType, statType):
     layerCounter = {}
     with open(logFilePath, 'r') as logFile:
         lines = logFile.readlines()
-        numElements = sum(statType in line for line in lines)
+        numElements = sum(LAYERS_TO_EXTRACT[0] in line for line in lines)
         intervalLength = int(numElements/NUM_OF_DATAPOINTS)
         for line in lines:
             processLine(line, dictToPlot, layerCounter, methodType, statType, intervalLength)
     return dictToPlot 
 
 def processLine(line, dictToPlot, layerCounter, methodType, statType, intervalLength):
-    if(methodType in line and statType in line):
-        layerName, value = extractValueFromLine(line, methodType, statType)
-        layerCounter[layerName] = layerCounter.get(layerName, 0) + 1
-        dictToPlot[layerName] = dictToPlot.get(layerName, [0])
+    for layerName in LAYERS_TO_EXTRACT:
+        if(methodType in line and statType in line and layerName in line):
+            value = extractValueFromLine(line, methodType, statType)
+            layerCounter[layerName] = layerCounter.get(layerName, 0) + 1
+            dictToPlot[layerName] = dictToPlot.get(layerName, [0])
 
-        if(layerCounter[layerName] % intervalLength == 0):
-            if(methodType in ['Mean', 'Var']):
-                dictToPlot[layerName][-1] = dictToPlot[layerName][-1]/float(intervalLength)
-            dictToPlot[layerName].append(value)
-        else:
-            if(methodType in ['Mean', 'Var']):
-                dictToPlot[layerName][-1] += value
-            elif(methodType == 'Max'):
-                dictToPlot[layerName][-1] = max(dictToPlot[layerName][-1], value)
-            elif(methodType == 'Min'):
-                dictToPlot[layerName][-1] = min(dictToPlot[layerName][-1], value)
+            if(layerCounter[layerName] % intervalLength == 0):
+                if(methodType in ['Mean', 'Var']):
+                    dictToPlot[layerName][-1] = dictToPlot[layerName][-1]/float(intervalLength)
+                dictToPlot[layerName].append(value)
+            else:
+                if(methodType in ['Mean', 'Var']):
+                    dictToPlot[layerName][-1] += value
+                elif(methodType == 'Max'):
+                    dictToPlot[layerName][-1] = max(dictToPlot[layerName][-1], value)
+                elif(methodType == 'Min'):
+                    dictToPlot[layerName][-1] = min(dictToPlot[layerName][-1], value)
             
 def extractValueFromLine(line, methodType, statType):
-    line = line.strip()
-    layerName = extractFeature(line, methodType)
-    value = extractFeature(line, statType)
-    return layerName, value
+    value = float(extractFeature(line.strip(), statType))
+    return value
 
 def extractFeature(line, feature):
     return line.split(feature + ':')[-1].split(' ')[0]
@@ -58,16 +58,17 @@ def plotStatForAllLayers(dictToPlot, methodType, statType, ax):
         values = dictToPlot[layer]
         ax.plot(np.arange(len(values)), np.asarray(values), label=layer)
     ax.set_title(methodType + ' - ' + statType)
+    ax.legend()
 
 curPath = getCurrentPath()
 statsToPlot = ['Mean','Var','Min','Max']
 methodsToPlot = ['Forward']
-fig, axs = plt.subplots(len(statsToPlot), len(methodsToPlot), figsize=(30,10))
+fig, axs = plt.subplots(len(statsToPlot), len(methodsToPlot), figsize=(10,30))
 if(len(methodsToPlot) == 1):
     axs = [ [ax] for ax in axs ]
 for i in range(len(statsToPlot)):
     for j in range(len(methodsToPlot)):
         dictToPlot = readInLogFileToDict(logFilePath, methodsToPlot[j], statsToPlot[i])
-        ipdb.set_trace()
+#        ipdb.set_trace()
         plotStatForAllLayers(dictToPlot, methodsToPlot[j], statsToPlot[i], axs[i][j])
 plt.savefig(curPath + '/' + plotPathToSave)
