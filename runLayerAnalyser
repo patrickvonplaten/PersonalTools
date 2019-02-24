@@ -56,7 +56,8 @@ if __name__ == "__main__":
 
     parseToIntTuple = ['figS','colI']
     for arg in parseToIntTuple:
-        args[arg] = tuple([int(x) for x in args[arg].split(',')])
+        if(args[arg]):
+            args[arg] = tuple([int(x) for x in args[arg].split(',')])
 
     plottingsFullName={
         '1D': '1DWeightsSimpleAll',

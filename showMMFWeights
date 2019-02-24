@@ -2,10 +2,13 @@
 import sys
 import pyhtk
 import ipdb
+import numpy as np
 
-name = sys.argv[1]
-MMFFilePaths=sys.argv[2:]
-#name = 'CNNLayer1Filter50_kernels'
+#name = sys.argv[1]
+MMFFilePaths=sys.argv[1:]
+name1 = 'CNNLayer2Filter1_kernels'
+name2 = 'CNNLayer2Filter2_kernels'
+name3 = 'CNNLayer2Filter3_kernels'
 #name = 'CNNLayer1_kernels'
 #name = 'FCLayer1_weight'
 
@@ -15,9 +18,14 @@ def getWeights(layerName, hmmSet):
 def print_layer_values(MMFFilePath, layerName):
     hmmSet = pyhtk.HTKModelReader(MMFFilePath, '').getHiddenMarkovModelSet()
     layerArray = getWeights(layerName, hmmSet)
-    print('layerArray[0][:20]: {}'.format(layerArray[0][:20]))
+    print('layerArrayMean: {}'.format(np.mean(np.absolute(layerArray))))
+#    print('layerArray[0][:20]: {}'.format(layerArray[0][:20]))
 
 for MMFFilePath in MMFFilePaths:
-    print('Print values for MMFFilePath: {}'.format(MMFFilePath))
-    print_layer_values(MMFFilePath, name)
+    print('Print values for MMFFilePath: {}'.format(name1))
+    print_layer_values(MMFFilePath, name1)
+    print('Print values for MMFFilePath: {}'.format(name2))
+    print_layer_values(MMFFilePath, name2)
+    print('Print values for MMFFilePath: {}'.format(name3))
+    print_layer_values(MMFFilePath, name3)
 
