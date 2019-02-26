@@ -17,7 +17,7 @@ if __name__ == "__main__":
     """)
 
     parser.add_argument('--dir', help='Step directory where returnn network files are stored. If nothing is provided, the current directory will be used as the step directory', default=None)
-    parser.add_argument('--layer', help='Name of layer as defined in returnn config file that is to be plotted,f.e.: "CNNLayer1_kernels, FCLayer1_weight, CNNLayer1Filter2_kernels"', default='CNNLayer1_kernels')
+    parser.add_argument('--layer', help='Name of layer as defined in returnn config file that is to be plotted,f.e.: "CNNLayer1_kernels, FCLayer1_weight, CNNLayer1Filter2_kernels, CNNLayer1Filter50_kernels,CNNLayer1Filter100_kernels,CNNLayer1Filter400_kernels"', default='CNNLayer1_kernels')
     parser.add_argument('--hmm', help='relativ path to hmm folder which contains the weights to be plotted', default='hmm0')
     parser.add_argument('--title', help='Title for all plots, that should be specified by the user', default='plot')
     parser.add_argument('--type', help="""
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     parser.add_argument('--init',help='if layer is initialized with previously trained network, give the path to the MMF weight file. Obviously, dimension of weights have to match', default=None)
     parser.add_argument('--sampRate',help='if "pad" is added weight array is padded to fit sample rate, which can be set here.', default=16000)
     parser.add_argument('--filt',help='states which filter functions for freq peaks should be used when doing the "Stat" plot', default='narrowBand,band,cleanPeaks,dirtyPeaks')
-    parser.add_argument('--multi',help='gives number of parallel filter streams that are used', default=1)
+    parser.add_argument('--multi',help='gives number of parallel filter streams that are used', default=None)
     parser.add_argument('--colI',help='states color interval to make plots identical', default=None)
     parser.add_argument('-rf', action='store_true', default=False, help='If "-rf" is added then weight directory will be deleted and recreated') 
     parser.add_argument('-rev', action='store_true', default=False, help='If "-rev" is added then weights array will be flippend for every kernel') 
@@ -50,9 +50,10 @@ if __name__ == "__main__":
 
     args = vars(parser.parse_args())
 
-    parseStringToList = ['type','d','c','r','filt']
+    parseStringToList = ['type','d','c','r','filt','layer','multi']
     for arg in parseStringToList:
-        args[arg] = args[arg].split(',')
+        if(args[arg]):
+            args[arg] = args[arg].split(',')
 
     parseToIntTuple = ['figS','colI']
     for arg in parseToIntTuple:
@@ -102,8 +103,17 @@ if __name__ == "__main__":
 
     pathToInitWeight = args['init']
     layerNameForInitWeight = None
-    layerName = args['layer']
-    pathLayerName = layerName.replace('/','_')
+
+    layerNames = args['layer']
+    multiLayerFormat = 'CNNLayer1Filter{}_kernels'
+    if(args[multi]):
+        layerNames = []
+        for filterSize in args[multi]:
+            layerNames.append(multiLayerFormat.format(filterSize))
+
+    layerNames = [ layerName.replace('/','_') for layerName in layerNames ]
+    pathLayerName = '_'.join(layerNames)
+
     pathToAnalysisDir = pathToStepDir + '/analysis_' + pathLayerName + '_layer' + analysisPathExtension
     pathToSaveWeightsDir = pathToAnalysisDir + '/weights_' + pathLayerName + '_layer'
 
@@ -125,17 +135,15 @@ if __name__ == "__main__":
 
     if(doSaveWeights or not doWeightExist):
         from returnnTfNetworkLayerSaver import LayerWeightSaver
-        for filterStreamIdx in range(1, numFilterStreams + 1):
-            layerNameExt = layerName.format(filterStreamIdx) if numFilterStreams > 1 else layerName
-            lws = LayerWeightSaver(modelDir, pathToSaveWeightsDir, layerNameExt, pathToInitWeight)
+        for layerName in layerNames:
+            lws = LayerWeightSaver(modelDir, pathToSaveWeightsDir, layerName, pathToInitWeight)
         numEpochs = lws.numEpochs
     else:
         print("Weights already exist. If you want to delete old weights and save new weights, add '-rf' to the command.")
         numEpochs = int(len([x for x in os.listdir(pathToSaveWeightsDir)])/numFilterStreams)
 
-    for filterStreamIdx in range(1, numFilterStreams + 1):
-        layerNameExt = layerName.format(filterStreamIdx) if numFilterStreams > 1 else layerName
-        layerPlotter = ReturnnLayerPlotter(pathToAnalysisDir, pathToSaveWeightsDir, layerNameExt, plottingConfigs, numEpochs)
+    for layerName in layerNames:
+        layerPlotter = ReturnnLayerPlotter(pathToAnalysisDir, pathToSaveWeightsDir, layerName, plottingConfigs, numEpochs)
         layerPlotter.run()
 
 

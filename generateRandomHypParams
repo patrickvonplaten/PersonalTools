@@ -8,8 +8,8 @@ import ipdb
 
 parser = argparse.ArgumentParser(description="Generate Random HypParameters")
 parser.add_argument('--dir')
-parser.add_argument('--lr', default='0.00007,0.0003')
-parser.add_argument('--wd', default='0.04,0.06')
+parser.add_argument('--lr', default='0.00009,0.0005')
+parser.add_argument('--wd', default='0.03,0.07')
 parser.add_argument('--upClip', default='0.2,0.6')
 parser.add_argument('--cv1Sc1', default='0.05,0.1')
 parser.add_argument('--cv1Sc2', default='0.25,0.35')
@@ -26,7 +26,7 @@ argDict1 = {
 }
 argDict2 = {
     'cv1Sc1': 'CNNLayer1Filter50_kernels',
-    'cv1Sc2': 'CNNLayer1Filter200_kernels',
+    'cv1Sc2': 'CNNLayer1Filter100_kernels',
     'cv1Sc3': 'CNNLayer1Filter400_kernels',
     'cv2Sc1': 'CNNLayer2Filter1_kernels',
     'cv2Sc2': 'CNNLayer2Filter2_kernels',
