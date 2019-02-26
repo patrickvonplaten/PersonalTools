@@ -89,7 +89,6 @@ if __name__ == "__main__":
     }
 
     bashCommand = "pwd"
-    numFilterStreams = int(args['multi'])
     process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
     output, error = process.communicate()
     pathToStepDir = output[:-1].decode('utf-8')
@@ -106,9 +105,9 @@ if __name__ == "__main__":
 
     layerNames = args['layer']
     multiLayerFormat = 'CNNLayer1Filter{}_kernels'
-    if(args[multi]):
+    if(args['multi']):
         layerNames = []
-        for filterSize in args[multi]:
+        for filterSize in args['multi']:
             layerNames.append(multiLayerFormat.format(filterSize))
 
     layerNames = [ layerName.replace('/','_') for layerName in layerNames ]
@@ -140,7 +139,7 @@ if __name__ == "__main__":
         numEpochs = lws.numEpochs
     else:
         print("Weights already exist. If you want to delete old weights and save new weights, add '-rf' to the command.")
-        numEpochs = int(len([x for x in os.listdir(pathToSaveWeightsDir)])/numFilterStreams)
+        numEpochs = int(len([x for x in os.listdir(pathToSaveWeightsDir)])/len(layerNames))
 
     for layerName in layerNames:
         layerPlotter = ReturnnLayerPlotter(pathToAnalysisDir, pathToSaveWeightsDir, layerName, plottingConfigs, numEpochs)
