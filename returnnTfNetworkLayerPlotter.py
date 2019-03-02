@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 import numpy as np
 import matplotlib
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+import scipy.signal 
 from scipy.signal import find_peaks
+import scipy
 import os
 import sys
-import ipdb 
+#import ipdb 
 
 class ReturnnLayerPlotter(object):
 

@@ -2,7 +2,7 @@
 
 import numpy as np
 import os, os.path
-import ipdb 
+#import ipdb 
 import pyhtk
 
 class LayerWeightSaver(object):

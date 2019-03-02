@@ -5,7 +5,7 @@ import argparse
 from returnnTfNetworkLayerPlotter import ReturnnLayerPlotter
 import shutil
 import subprocess
-import ipdb
+#import ipdb
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="""
