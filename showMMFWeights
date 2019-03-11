@@ -18,8 +18,8 @@ def getWeights(layerName, hmmSet):
 def print_layer_values(MMFFilePath, layerName):
     hmmSet = pyhtk.HTKModelReader(MMFFilePath, '').getHiddenMarkovModelSet()
     layerArray = getWeights(layerName, hmmSet)
-    print('layerArrayMean: {}'.format(np.mean(np.absolute(layerArray))))
-#    print('layerArray[0][:20]: {}'.format(layerArray[0][:20]))
+#    print('layerArray: {}'.format(np.mean(np.absolute(layerArray))))
+    print('layerArray[0][:20]: {}'.format(layerArray[0][:20]))
 
 for MMFFilePath in MMFFilePaths:
     print('Print values for MMFFilePath: {}'.format(name1))

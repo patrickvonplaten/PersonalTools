@@ -4,8 +4,8 @@ import pyhtk
 import ipdb
 
 epochNumbersInput=sys.argv[1]
-#name = 'CNNLayer1_kernels'
-name = 'FCLayer1_weight'
+name = 'CNNLayer1_kernels'
+#name = 'FCLayer1_weight'
 
 def getWeights(layerName, hmmSet):
     return hmmSet.getNMatrixTable()[layerName].getValuesAsNumPyArray()
