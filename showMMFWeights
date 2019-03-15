@@ -16,6 +16,7 @@ def getWeights(layerName, hmmSet):
     return hmmSet.getNMatrixTable()[layerName].getValuesAsNumPyArray()
 
 def print_layer_values(MMFFilePath, layerName):
+    ipdb.set_trace()
     hmmSet = pyhtk.HTKModelReader(MMFFilePath, '').getHiddenMarkovModelSet()
     layerArray = getWeights(layerName, hmmSet)
 #    print('layerArray: {}'.format(np.mean(np.absolute(layerArray))))
