@@ -41,7 +41,7 @@ if __name__ == "__main__":
     parser.add_argument('--init',help='if layer is initialized with previously trained network, give the path to the MMF weight file. Obviously, dimension of weights have to match', default=None)
     parser.add_argument('--sampRate',help='if "pad" is added weight array is padded to fit sample rate, which can be set here.', default=16000)
     parser.add_argument('--filt',help='states which filter functions for freq peaks should be used when doing the "Stat" plot', default='narrowBand,band,cleanPeaks,dirtyPeaks')
-    parser.add_argument('--multi',help='gives number of parallel filter streams that are used', default=None)
+    parser.add_argument('--multi',help='gives the filtersize that are used for the multiple first layers', default=None)
     parser.add_argument('--colI',help='states color interval to make plots identical', default=None)
     parser.add_argument('-rf', action='store_true', default=False, help='If "-rf" is added then weight directory will be deleted and recreated') 
     parser.add_argument('-rev', action='store_true', default=False, help='If "-rev" is added then weights array will be flippend for every kernel') 
