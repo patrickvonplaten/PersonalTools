@@ -46,12 +46,12 @@ class ReturnnLayerPlotter(object):
         doPaddedFourierTransform = self.plottingConfigs['pad']
         sampleRate = self.plottingConfigs['sampleRate']
         dimInput = int(self.plottingConfigs['dimInput'])
-
+        stride = int(self.plottingConfigs['stride']) if self.plottingConfigs['stride'] else 1
         if(isLayerWeightComposedOf1Subarrays):
             return FeedForwardLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate)
         elif(isLayerWeightComposedOf2Subarrays):
             if(self.layerType == 'conv'):
-                return Conv1DLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate, dimInput) 
+                return Conv1DLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate, dimInput, stride) 
             elif(self.layerType == 'feed'):
                 return FeedForwardLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, dimInput)
 
@@ -108,10 +108,10 @@ class Layer(object):
 
 class ProcessedWeights(object):
 
-    def __init__(self, weights, filterSize, isPlottingDomainLog, dimInput, doPaddedFourierTransform, sampleRate, timeFreqRatio=2): 
+    def __init__(self, weights, filterSize, isPlottingDomainLog, dimInput, doPaddedFourierTransform, sampleRate, stride, timeFreqRatio=2): 
         self.dimInput = dimInput
-        self.weights = weights
-        self.filterSize = filterSize 
+        self.weights = weights[1::stride]
+        self.filterSize = int(np.ceil(filterSize / stride))
         self.timeFreqRatio = timeFreqRatio
         self.permutation = None 
         self.isPlottingDomainLog = isPlottingDomainLog
@@ -243,14 +243,14 @@ class Peaks(object):
 
 class FeedForwardLayer(Layer):
     
-    def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate, dimInput):
+    def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate, dimInput, stride=1):
         super(FeedForwardLayer, self).__init__(weights, name, namePath, isPlottingDomainLog, dimInput)
         self.numFilters = self.shape[0]
         assert weights[0].shape[0] == self.numFilters, "dim not correct"
         self.addToAllowedPlottings(['1DWeightsSimpleAll','2DWeightsHeat'])
         self.setLayerType(type(self).__name__)
         self.createPlottingsToDo(wishedPlottings)
-        self.processedWeights = ProcessedWeights(self.weights, self.filterSize, isPlottingDomainLog, self.dimInput, doPaddedFourierTransform, sampleRate)
+        self.processedWeights = ProcessedWeights(self.weights, self.filterSize, isPlottingDomainLog, self.dimInput, doPaddedFourierTransform, sampleRate, stride)
         self.channelUsedForPermutation = 0 
 
     def getPlotable1DWeights(self):
@@ -265,14 +265,14 @@ class FeedForwardLayer(Layer):
 
 class Conv1DLayer(Layer):
 
-    def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate, dimInput):
+    def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate, dimInput, stride):
         super(Conv1DLayer, self).__init__(weights, name, namePath, isPlottingDomainLog, sampleRate, dimInput)
         self.numFilters = self.shape[0]
         assert weights[0].shape[0] == self.numFilters, "dim not correct"
         self.addToAllowedPlottings(['1DWeightsSimpleAll','2DFilterStats','2DWeightsHeat'])
         self.setLayerType(type(self).__name__)
         self.createPlottingsToDo(wishedPlottings)
-        self.processedWeights = ProcessedWeights(self.weights, self.filterSize, isPlottingDomainLog, self.dimInput, doPaddedFourierTransform, sampleRate)
+        self.processedWeights = ProcessedWeights(self.weights, self.filterSize, isPlottingDomainLog, self.dimInput, doPaddedFourierTransform, sampleRate, stride)
         self.peaks = Peaks(self.processedWeights.plotableWeightsFreq)
         self.channelUsedForPermutation = 0 
 
