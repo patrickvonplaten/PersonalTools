@@ -126,7 +126,12 @@ class ProcessedWeights(object):
         self.plotableWeightsFreq, self.plotableWeightsFreqSorted = self.getFrequencyDomain()
         self.plotableWeightsFreqAmpMod, self.plotableWeightsFreqSortedAmpMod = self.getFrequencyDomain(doAnalytical=True)
 
-    def getPlotable2DWeights(self, domain):
+    def getPlotable2DWeights(self, domain, doAnalytical):
+        if doAnalytical:
+            if domain == 'time':
+                return self.transformToHeatPlotableWeights(self.plotableWeightsAmpMod, 1)
+            elif domain == 'freq':
+                return self.transformToHeatPlotableWeights(self.plotableWeightsFreqAmpMod, self.timeFreqRatio)
         if domain == 'time':
             return self.transformToHeatPlotableWeights(self.plotableWeights, 1)
         elif domain == 'freq':
@@ -274,8 +279,8 @@ class FeedForwardLayer(Layer):
         self.processedWeights = ProcessedWeights(self.weights, self.filterSize, isPlottingDomainLog, self.dimInput, doPaddedFourierTransform, sampleRate, stride)
         self.channelUsedForPermutation = 0 
 
-    def getPlotable1DWeights(self):
-        return self.processedWeights.getPlotable1DWeights(self.domain, self.dimInputIdx)
+    def getPlotable1DWeights(self, doAnalytical=False):
+        return self.processedWeights.getPlotable1DWeights(self.domain, self.dimInputIdx, doAnalytical)
 
     def getPlotable2DWeights(self):
         return self.processedWeights.getPlotable2DWeights(self.domain)
@@ -297,14 +302,14 @@ class Conv1DLayer(Layer):
         self.peaks = Peaks(self.processedWeights.plotableWeightsFreq)
         self.channelUsedForPermutation = 0 
 
-    def getPlotable1DWeights(self):
-        return self.processedWeights.getPlotable1DWeights(self.domain, self.dimInputIdx)
+    def getPlotable1DWeights(self, doAnalytical):
+        return self.processedWeights.getPlotable1DWeights(self.domain, self.dimInputIdx, doAnalytical)
 
-    def getPlotable2DWeights(self):
-        return self.processedWeights.getPlotable2DWeights(self.domain)
+    def getPlotable2DWeights(self, doAnalytical):
+        return self.processedWeights.getPlotable2DWeights(self.domain, doAnalytical)
 
-    def getPlotableSorted2DWeights(self):
-        return self.processedWeights.getPlotableSorted2DWeights()
+    def getPlotableSorted2DWeights(self, doAnalytical=False):
+        return self.processedWeights.getPlotableSorted2DWeights(doAnalytical)
 
     def getPeaks(self, epoch, filterFn):
         return self.peaks.getPeaks(epoch, filterFn)
@@ -397,8 +402,9 @@ class Plotter(object):
     def plot1DSimpleWeightsAll(self):
         assert 'samplesPerRow' in self.plottingConfigs, 'Needs to give the attribute samplesPerRow'
 
-        analyticalSignalExtension='_analytical_signal' if self.plottingConfigs['analytical'] else ''
-        plotableWeights, timeArray = self.layer.getPlotable1DWeights()
+        doAnalytical = self.plottingConfigs['analytical']
+        analyticalSignalExtension='_analytical_signal' if doAnalytical else ''
+        plotableWeights, timeArray = self.layer.getPlotable1DWeights(doAnalytical)
         numFilters = plotableWeights[0].shape[0]
         if(not self.samplesPerColumn):
             self.samplesPerColumn = int(np.ceil(numFilters/float(self.samplesPerRow)))
@@ -430,7 +436,8 @@ class Plotter(object):
         assert mode in ['sorted','unsorted'], "mode has to be sorted or unsorted"
         
         fig, axs = plt.subplots(self.layer.dimInput, len(self.epochRangeToPlot), figsize=self.figSize, sharex=True, sharey=True)
-        analyticalSignalExtension='_analytical_signal' if self.plottingConfigs['analytical'] else ''
+        doAnalytical = self.plottingConfigs['analytical']
+        analyticalSignalExtension='_analytical_signal' if doAnalytical else ''
 
         if(self.layer.dimInput == 1 and not isinstance(axs, np.ndarray)):
             axs = [[axs]]
@@ -440,10 +447,10 @@ class Plotter(object):
             axs = [[ax] for ax in axs]
 
         if(mode == 'sorted'):
-            plotableWeights = self.layer.getPlotableSorted2DWeights()
+            plotableWeights = self.layer.getPlotableSorted2DWeights(doAnalytical)
             mode = 'sorted_by_channel_' + str(self.layer.channelUsedForPermutation)
         elif(mode == 'unsorted'):
-            plotableWeights = self.layer.getPlotable2DWeights()
+            plotableWeights = self.layer.getPlotable2DWeights(doAnalytical)
 
         for epochRangeIdx, plotableWeightPerEpoch in enumerate(plotableWeights):
             for dimInputIdx, plotableWeightPerDim in enumerate(plotableWeightPerEpoch): 
