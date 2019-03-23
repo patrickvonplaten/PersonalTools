@@ -6,6 +6,7 @@ import matplotlib.gridspec as gridspec
 from scipy.signal import find_peaks
 import os
 import sys
+from scipy.signal import hilbert
 import ipdb 
 
 class ReturnnLayerPlotter(object):
@@ -168,20 +169,20 @@ class ProcessedWeights(object):
 
     def extractWeightToAppend(self, weights, numFilters, doAnalytical=False):
         weightsToAppend = np.zeros((numFilters, self.filterSize, self.dimInput))
-        weight = np.zeros(self.filterSize)
+        filterWeight = np.zeros(self.filterSize)
         for i in range(numFilters): 
-            for j in range(self.filterSize):
-                for k in range(self.dimInput):
+            for k in range(self.dimInput):
+                for j in range(self.filterSize):
                     filterDimIdx = self.dimInput * j + k
-                    weight = weights[i, filterDimIdx]
-                    if(doAnalytical):
-                        weight = np.abs(hilbert(weights[i, filterDimIdx]))
-                    weightsToAppend[i,j,k] = weight
+                    if(not doAnalytical):
+                        weightsToAppend[i,j,k] = weights[i, filterDimIdx]
+                    else:
+                        filterWeight[j] = weights[i, filterDimIdx]
+                if(doAnalytical):
+                    weightsToAppend[i,:,k] = np.abs(hilbert(filterWeight))
         return weightsToAppend
 
-    def transformWeightToAnalyticalSignal(self, weights, numFilters 
-
-    def getFrequencyDomain(self,doAnalytical=False):
+    def getFrequencyDomain(self, doAnalytical=False):
         timeAxis = np.arange(self.filterSize/self.timeFreqRatio)
         if(doAnalytical):
             plotableWeightsFreq = [self.fourierTransform(x, self.noSortFreq) for x in self.plotableWeightsAmpMod]
@@ -393,6 +394,7 @@ class Plotter(object):
     def plot1DSimpleWeightsAll(self):
         assert 'samplesPerRow' in self.plottingConfigs, 'Needs to give the attribute samplesPerRow'
 
+        analyticalSignalExtension='_analytical_signal' if self.plottingConfigs['analytical'] else ''
         plotableWeights, timeArray = self.layer.getPlotable1DWeights()
         numFilters = plotableWeights[0].shape[0]
         if(not self.samplesPerColumn):
@@ -407,7 +409,7 @@ class Plotter(object):
                         self.plot1DGraph(axs, i, j, timeArray, plotableWeight[filterNum], j)
                         self.setGraphYAxisLable(axs, i, j, 'filter.' + "%02d" % (filterNum+1,))
                 
-            plotId = '_epoch' + str(self.epochRangeToPlot[epochRangeIdx]) + '_' + self.layer.domain + '_dimIdx' + str(self.layer.dimInputIdx) + '_filterLength=' + str(self.layer.filterSize) + '_all'
+            plotId = '_epoch' + str(self.epochRangeToPlot[epochRangeIdx]) + '_' + self.layer.domain + '_dimIdx' + str(self.layer.dimInputIdx) + '_filterLength=' + str(self.layer.filterSize) + '_all' + analyticalSignalExtension
             self.savePlot(plt, plotId)
             self.setPlotTitle(plt, plotId)
 
@@ -425,6 +427,7 @@ class Plotter(object):
         assert mode in ['sorted','unsorted'], "mode has to be sorted or unsorted"
         
         fig, axs = plt.subplots(self.layer.dimInput, len(self.epochRangeToPlot), figsize=self.figSize, sharex=True, sharey=True)
+        analyticalSignalExtension='_analytical_signal' if self.plottingConfigs['analytical'] else ''
 
         if(self.layer.dimInput == 1 and not isinstance(axs, np.ndarray)):
             axs = [[axs]]
@@ -457,8 +460,8 @@ class Plotter(object):
         
         numDomain = '_log_applied' if(self.layer.isPlottingDomainLog and self.layer.domain == 'freq') else ''
 
-        plt.suptitle(self.title + '_' + self.layer.domain + '_for_epoch_' + '_'.join(str(x) for x in self.epochRangeToPlot) + numDomain, fontsize=self.titleFontSize, y=self.titleYPosition)
-        plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_heat_map_' + self.layer.domain + '_' + mode + numDomain + '_filterLength=' + str(self.layer.filterSize))
+        plt.suptitle(self.title + '_' + self.layer.domain + '_for_epoch_' + '_'.join(str(x) for x in self.epochRangeToPlot) + numDomain + analyticalSignalExtension, fontsize=self.titleFontSize, y=self.titleYPosition)
+        plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_heat_map_' + self.layer.domain + '_' + mode + numDomain + '_filterLength=' + str(self.layer.filterSize) + analyticalSignalExtension)
 
     def setGraphXAxisLable(self, axs, axsRowIdx, axsColIdx, label):
         axs[axsRowIdx][axsColIdx].set_xlabel(label) 
