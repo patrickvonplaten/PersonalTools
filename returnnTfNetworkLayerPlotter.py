@@ -47,11 +47,12 @@ class ReturnnLayerPlotter(object):
         sampleRate = self.plottingConfigs['sampleRate']
         dimInput = int(self.plottingConfigs['dimInput'])
         stride = int(self.plottingConfigs['stride']) if self.plottingConfigs['stride'] else 1
+        doAnalytical = self.plottingConfigs['analytical']
         if(isLayerWeightComposedOf1Subarrays):
             return FeedForwardLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate)
         elif(isLayerWeightComposedOf2Subarrays):
             if(self.layerType == 'conv'):
-                return Conv1DLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate, dimInput, stride) 
+                return Conv1DLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate, dimInput, stride, doAnalytical) 
             elif(self.layerType == 'feed'):
                 return FeedForwardLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, dimInput)
 
@@ -108,7 +109,7 @@ class Layer(object):
 
 class ProcessedWeights(object):
 
-    def __init__(self, weights, filterSize, isPlottingDomainLog, dimInput, doPaddedFourierTransform, sampleRate, stride, timeFreqRatio=2): 
+    def __init__(self, weights, filterSize, isPlottingDomainLog, dimInput, doPaddedFourierTransform, sampleRate, stride, doAnalytical, timeFreqRatio=2): 
         self.dimInput = dimInput
         self.weights = weights[1::stride]
         self.filterSize = int(np.ceil(filterSize / stride))
@@ -120,7 +121,9 @@ class ProcessedWeights(object):
         self.timeAxisTime = np.arange(self.filterSize)
         self.timeAxisFreq = np.arange(int(self.filterSize/2)) if not doPaddedFourierTransform else np.arange(int(self.sampleRate/2))
         self.plotableWeights = self.create_plotable_weights(weights)
+        self.plotableWeightsAmpMod = self.create_plotable_weights(weights, doAnalytical=True)
         self.plotableWeightsFreq, self.plotableWeightsFreqSorted = self.getFrequencyDomain()
+        self.plotableWeightsFreqAmpMod, self.plotableWeightsFreqSortedAmpMod = self.getFrequencyDomain(doAnalytical=True)
 
     def getPlotable2DWeights(self, domain):
         if domain == 'time':
@@ -128,13 +131,20 @@ class ProcessedWeights(object):
         elif domain == 'freq':
             return self.transformToHeatPlotableWeights(self.plotableWeightsFreq, self.timeFreqRatio)
 
-    def getPlotable1DWeights(self, domain, dimInputIdx):
+    def getPlotable1DWeights(self, domain, dimInputIdx, doAnalytical=False):
+        if doAnalytical:
+            if domain == 'time':
+                return self.plotableWeightsAmpMod[dimInputIdx], self.timeAxisTime
+            elif domain == 'freq':
+                return self.plotableWeightsFreqAmpMod[dimInputIdx], self.timeAxisFreq
         if domain == 'time':
             return self.plotableWeights[dimInputIdx], self.timeAxisTime
         elif domain == 'freq':
             return self.plotableWeightsFreq[dimInputIdx], self.timeAxisFreq
 
-    def getPlotableSorted2DWeights(self):
+    def getPlotableSorted2DWeights(self, doAnalytical=False):
+        if doAnalytical:
+            return self.transformToHeatPlotableWeights(self.plotableWeightsFreqSortedAmpMod, self.timeFreqRatio)
         return self.transformToHeatPlotableWeights(self.plotableWeightsFreqSorted, self.timeFreqRatio)
 
     def transformToHeatPlotableWeights(self, listOfWeights, filterSizeRatio):
@@ -150,28 +160,38 @@ class ProcessedWeights(object):
             transformedList.append(l)
         return transformedList
 
-    def create_plotable_weights(self, weights):
-        self.plotableWeights = [[] for x in range(self.dimInput)]
+    def create_plotable_weights(self, weights, doAnalytical=False):
+        plotableWeights = [[] for x in range(self.dimInput)]
         numEpochs = len(weights)
         for epochIdx in range(numEpochs):
-            weightsToAppend = self.extractWeightToAppend(weights[epochIdx], weights[epochIdx].shape[0])
+            weightsToAppend = self.extractWeightToAppend(weights[epochIdx], weights[epochIdx].shape[0],doAnalytical)
             for i in range(self.dimInput):
-                self.plotableWeights[i].append(weightsToAppend[:,:,i])
-        return self.plotableWeights
+                plotableWeights[i].append(weightsToAppend[:,:,i])
+        return plotableWeights
 
-    def extractWeightToAppend(self, weights, numFilters):
+    def extractWeightToAppend(self, weights, numFilters, doAnalytical=False):
         weightsToAppend = np.zeros((numFilters, self.filterSize, self.dimInput))
+        weight = np.zeros(self.filterSize)
         for i in range(numFilters): 
             for j in range(self.filterSize):
                 for k in range(self.dimInput):
                     filterDimIdx = self.dimInput * j + k
-                    weightsToAppend[i,j,k] = weights[i, filterDimIdx]
+                    weight = weights[i, filterDimIdx]
+                    if(doAnalytical):
+                        weight = np.abs(hilbert(weights[i, filterDimIdx]))
+                    weightsToAppend[i,j,k] = weight
         return weightsToAppend
 
-    def getFrequencyDomain(self):
+    def transformWeightToAnalyticalSignal(self, weights, numFilters 
+
+    def getFrequencyDomain(self,doAnalytical=False):
         timeAxis = np.arange(self.filterSize/self.timeFreqRatio)
-        plotableWeightsFreq = [self.fourierTransform(x, self.noSortFreq) for x in self.plotableWeights]
-        plotableWeightsFreqSorted = [self.fourierTransform(x, self.sortFreq) for x in self.plotableWeights]
+        if(doAnalytical):
+            plotableWeightsFreq = [self.fourierTransform(x, self.noSortFreq) for x in self.plotableWeightsAmpMod]
+            plotableWeightsFreqSorted = [self.fourierTransform(x, self.sortFreq) for x in self.plotableWeightsAmpMod]
+        else:
+            plotableWeightsFreq = [self.fourierTransform(x, self.noSortFreq) for x in self.plotableWeights]
+            plotableWeightsFreqSorted = [self.fourierTransform(x, self.sortFreq) for x in self.plotableWeights]
         return plotableWeightsFreq, plotableWeightsFreqSorted
 
     def fourierTransform(self, plotableWeightsSingleDim, sortFn):
@@ -265,14 +285,14 @@ class FeedForwardLayer(Layer):
 
 class Conv1DLayer(Layer):
 
-    def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate, dimInput, stride):
+    def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate, dimInput, stride, doAnalytical):
         super(Conv1DLayer, self).__init__(weights, name, namePath, isPlottingDomainLog, sampleRate, dimInput)
         self.numFilters = self.shape[0]
         assert weights[0].shape[0] == self.numFilters, "dim not correct"
         self.addToAllowedPlottings(['1DWeightsSimpleAll','2DFilterStats','2DWeightsHeat'])
         self.setLayerType(type(self).__name__)
         self.createPlottingsToDo(wishedPlottings)
-        self.processedWeights = ProcessedWeights(self.weights, self.filterSize, isPlottingDomainLog, self.dimInput, doPaddedFourierTransform, sampleRate, stride)
+        self.processedWeights = ProcessedWeights(self.weights, self.filterSize, isPlottingDomainLog, self.dimInput, doPaddedFourierTransform, sampleRate, stride, doAnalytical)
         self.peaks = Peaks(self.processedWeights.plotableWeightsFreq)
         self.channelUsedForPermutation = 0 
 
