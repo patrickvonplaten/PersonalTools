@@ -23,7 +23,6 @@ if __name__ == "__main__":
     parser.add_argument('--type', help="""
     Decide which plotting type is wanted. Make a list by choesing of '1D','1Dd','2D',3Dh' with 
     '1D' = weights, time plotting for all filters on one plot for all epochs
-    '1Dd' = weights, time plotting over specified epochs for all filters in multiple plots defined by other configurations
     'Stat' = 2D filter stats in freq domain are plotted
     '2D' = filter, weights plotting with values shown in heat mapping
     '3D' = for 2D filters only. filter's first dimension, weights plotting with values shown in heat mapping over multiple plots for all filter's second dimension.
@@ -48,6 +47,7 @@ if __name__ == "__main__":
     parser.add_argument('-rev', action='store_true', default=False, help='If "-rev" is added then weights array will be flippend for every kernel') 
     parser.add_argument('-log', action='store_true', default=False, help='If "-log" is added then plots of conv layer will be plotted in log scale') 
     parser.add_argument('-pad', action='store_true', default=False, help='If "-pad" is added then fourier transform is done on zero padded array so that it fits with the sampling rate') 
+    parser.add_argument('-anal', action='store_true', default=False, help='If "-anal" is added then the analytical signal is plotted')
 
     args = vars(parser.parse_args())
 
@@ -83,6 +83,7 @@ if __name__ == "__main__":
         'layerType': args['layType'],
         'reverse': args['rev'],
         'pad': args['pad'],
+        'analytical': args['anal'],
         'sampleRate': args['sampRate'],
         'filterFunctions': args['filt'],
         'dimInput': args['dim'],
