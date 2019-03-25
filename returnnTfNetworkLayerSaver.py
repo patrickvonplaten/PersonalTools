@@ -22,6 +22,7 @@ class LayerWeightSaver(object):
         if(self.pathToInitWeight):
             self.saveWeight('epoch0_MMF', self.pathToInitWeight)
         for modelName in modelNames:
+            print('_'.join(modelName.split('/')), self.modelDir + '/' + modelName)
             self.saveWeight('_'.join(modelName.split('/')), self.modelDir + '/' + modelName)
         
         print('...saving weights of layer ' + self.nameOfLayerPath + ' done!')

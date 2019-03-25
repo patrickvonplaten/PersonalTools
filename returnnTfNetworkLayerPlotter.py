@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import numpy as np
 import matplotlib
-import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import pylab
 import scipy.signal 
 from scipy.signal import find_peaks
 import scipy
@@ -125,6 +125,12 @@ class ProcessedWeights(object):
         self.plotableWeightsAmpMod = self.create_plotable_weights(weights, doAnalytical=True)
         self.plotableWeightsFreq, self.plotableWeightsFreqSorted = self.getFrequencyDomain()
         self.plotableWeightsFreqAmpMod, self.plotableWeightsFreqSortedAmpMod = self.getFrequencyDomain(doAnalytical=True)
+
+    def getSinglePlotable1DWeightLastEpoch(self, domain, dimInputIdx, kernelNum):
+        if domain == 'time':
+            return self.plotableWeights[dimInputIdx][-1][kernelNum], self.timeAxisTime
+        elif domain == 'freq':
+            return self.plotableWeightsFreq[dimInputIdx][-1][kernelNum], self.timeAxisFreq
 
     def getPlotable2DWeights(self, domain, doAnalytical):
         if doAnalytical:
@@ -295,12 +301,15 @@ class Conv1DLayer(Layer):
         super(Conv1DLayer, self).__init__(weights, name, namePath, isPlottingDomainLog, sampleRate, dimInput)
         self.numFilters = self.shape[0]
         assert weights[0].shape[0] == self.numFilters, "dim not correct"
-        self.addToAllowedPlottings(['1DWeightsSimpleAll','2DFilterStats','2DWeightsHeat'])
+        self.addToAllowedPlottings(['1DWeightsSimpleAll','2DFilterStats','2DWeightsHeat','1DSingleKernel'])
         self.setLayerType(type(self).__name__)
         self.createPlottingsToDo(wishedPlottings)
         self.processedWeights = ProcessedWeights(self.weights, self.filterSize, isPlottingDomainLog, self.dimInput, doPaddedFourierTransform, sampleRate, stride, doAnalytical)
         self.peaks = Peaks(self.processedWeights.plotableWeightsFreq)
         self.channelUsedForPermutation = 0 
+
+    def getSinglePlotable1DWeightLastEpoch(self, kernelNum):
+        return self.processedWeights.getSinglePlotable1DWeightLastEpoch(self.domain, self.dimInputIdx, kernelNum)
 
     def getPlotable1DWeights(self, doAnalytical):
         return self.processedWeights.getPlotable1DWeights(self.domain, self.dimInputIdx, doAnalytical)
@@ -347,6 +356,10 @@ class Plotter(object):
         self.titleYPosition = 0.93
             
     def plot(self):
+        for inputDimIdx in range(self.layer.dimInput):
+            self.layer.setDimInputIdx(inputDimIdx)
+            if('1DSingleKernel' in self.layer.plottingsToDo):
+                self.plot1DSingleKernel()
         for domain in self.plottingConfigs['domainType']:
             self.layer.setDomain(domain)
             for inputDimIdx in range(self.layer.dimInput):
@@ -398,6 +411,35 @@ class Plotter(object):
             axs[barIdx][filterFunctionIdx].set_xticks(range(0,maxFreq+1, intervalLen))
             axs[barIdx][filterFunctionIdx].set_xlabel('Frequency')
             axs[barIdx][filterFunctionIdx].set_ylabel('Count')
+
+    def plot1DSingleKernel(self):
+        assert 'samplesPerRow' in self.plottingConfigs, 'Needs to give the attribute samplesPerRow'
+        kernelNums = self.plottingConfigs['kernelNums']
+
+#        fig, axs = plt.subplots(len(kernelNums), 1, figsize=self.plottingConfigs['figSize']True)
+        figprops = dict(figsize=self.plottingConfigs['figSize'], dpi=128)                                          # Figure properties
+        adjustprops = dict(left=0.1, bottom=0.1, right=0.97, top=0.93, wspace=0.2, hspace=0.2)
+        axs = [ [None, None] for i in range(len(kernelNums)) ]
+
+        fig = pylab.figure(**figprops)                                                              # New figure
+        fig.subplots_adjust(**adjustprops)
+
+        for kernelIdx in range(len(kernelNums)):
+            kernelNum = int(kernelNums[kernelIdx])
+            for domainIdx,domain in enumerate(['time','freq']):
+                self.layer.setDomain(domain)
+                plotableWeight, timeArray = self.layer.getSinglePlotable1DWeightLastEpoch(kernelNum)
+                if(kernelIdx > 0):
+                    axs[kernelIdx][domainIdx] = fig.add_subplot(3,2,2*kernelIdx + 1 + domainIdx, sharey=axs[0][domainIdx])
+                else:
+                    axs[kernelIdx][domainIdx] = fig.add_subplot(3,2,2*kernelIdx + 1 + domainIdx)
+                axs[kernelIdx][domainIdx].plot(timeArray, plotableWeight)
+                if(kernelIdx == len(kernelNums) - 1):
+                    axs[kernelIdx][domainIdx].set(xlabel='[' + self.layer.domain + ']')
+                axs[kernelIdx][domainIdx].grid()
+        figId = 'Figure_' + str(self.layer.filterSize) + '_singleFilter'
+        fig.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + figId)
+
 
     def plot1DSimpleWeightsAll(self):
         assert 'samplesPerRow' in self.plottingConfigs, 'Needs to give the attribute samplesPerRow'

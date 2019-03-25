@@ -27,7 +27,7 @@ if __name__ == "__main__":
     '2D' = filter, weights plotting with values shown in heat mapping
     '3D' = for 2D filters only. filter's first dimension, weights plotting with values shown in heat mapping over multiple plots for all filter's second dimension.
     Default is 'all' meaning that all possible plots for this layer are plotted. 
-    """, default='1D,1Dd,2D,3Dh,Stat')
+    """, default='1D,2D,3D,Stat,Single')
     parser.add_argument('--c',help='define colors used for matplotlib colors for 1D plots. Make sure that num of colors is equal to samplesPerRow', default='c,b,r,g')
     parser.add_argument('--cmap',help='define colormap theme used for 2D Heat Map for conv layers.' , default='hot')
     parser.add_argument('--spr',help='samples to be plotted per row in plot',default=4)
@@ -39,6 +39,7 @@ if __name__ == "__main__":
     parser.add_argument('--d',help='domains that should be plotted: "time" and/or "freq"',default='time,freq')
     parser.add_argument('--init',help='if layer is initialized with previously trained network, give the path to the MMF weight file. Obviously, dimension of weights have to match', default=None)
     parser.add_argument('--sampRate',help='if "pad" is added weight array is padded to fit sample rate, which can be set here.', default=16000)
+    parser.add_argument('--kernelNums',help='if type single is added this kernelNum is the index of the kernel to be plotted', default=16000)
     parser.add_argument('--filt',help='states which filter functions for freq peaks should be used when doing the "Stat" plot', default='narrowBand,band,cleanPeaks,dirtyPeaks')
     parser.add_argument('--multi',help='gives the filtersize that are used for the multiple first layers', default=None)
     parser.add_argument('--strds',help='gives the filtersize that are used for the multiple first layers', default=None)
@@ -51,7 +52,7 @@ if __name__ == "__main__":
 
     args = vars(parser.parse_args())
 
-    parseStringToList = ['type','d','c','r','filt','layer','multi','strds']
+    parseStringToList = ['type','d','c','r','filt','layer','multi','strds','kernelNums']
     for arg in parseStringToList:
         if(args[arg]):
             args[arg] = args[arg].split(',')
@@ -63,10 +64,10 @@ if __name__ == "__main__":
 
     plottingsFullName={
         '1D': '1DWeightsSimpleAll',
-        '1Dd': '1DWeightsSimpleDetail',
+        'Single': '1DSingleKernel',
         '2D': '2DWeightsHeat',
         'Stat': '2DFilterStats',
-        '3Dh': '3DWeightsHeat'
+        '3D': '3DWeightsHeat'
     }
 
     plottingConfigs={
@@ -88,6 +89,7 @@ if __name__ == "__main__":
         'filterFunctions': args['filt'],
         'dimInput': args['dim'],
         'colorInterval': args['colI'],
+        'kernelNums': args['kernelNums']
     }
 
     bashCommand = "pwd"
