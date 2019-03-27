@@ -423,18 +423,19 @@ class Plotter(object):
 
         fig = pylab.figure(**figprops)                                                              # New figure
         fig.subplots_adjust(**adjustprops)
+        numKernels = len(kernelNums)
 
-        for kernelIdx in range(len(kernelNums)):
+        for kernelIdx in range(numKernels):
             kernelNum = int(kernelNums[kernelIdx])
             for domainIdx,domain in enumerate(['time','freq']):
                 self.layer.setDomain(domain)
                 plotableWeight, timeArray = self.layer.getSinglePlotable1DWeightLastEpoch(kernelNum)
                 if(kernelIdx > 0):
-                    axs[kernelIdx][domainIdx] = fig.add_subplot(3,2,2*kernelIdx + 1 + domainIdx, sharey=axs[0][domainIdx])
+                    axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,2,2*kernelIdx + 1 + domainIdx, sharey=axs[0][domainIdx])
                 else:
-                    axs[kernelIdx][domainIdx] = fig.add_subplot(3,2,2*kernelIdx + 1 + domainIdx)
+                    axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,2,2*kernelIdx + 1 + domainIdx)
                 axs[kernelIdx][domainIdx].plot(timeArray, plotableWeight)
-                if(kernelIdx == len(kernelNums) - 1):
+                if(kernelIdx == numKernels - 1):
                     axs[kernelIdx][domainIdx].set(xlabel='[' + self.layer.domain + ']')
                 axs[kernelIdx][domainIdx].grid()
         figId = 'Figure_' + str(self.layer.filterSize) + '_singleFilter'
