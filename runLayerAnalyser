@@ -39,7 +39,7 @@ if __name__ == "__main__":
     parser.add_argument('--d',help='domains that should be plotted: "time" and/or "freq"',default='time,freq')
     parser.add_argument('--init',help='if layer is initialized with previously trained network, give the path to the MMF weight file. Obviously, dimension of weights have to match', default=None)
     parser.add_argument('--sampRate',help='if "pad" is added weight array is padded to fit sample rate, which can be set here.', default=16000)
-    parser.add_argument('--kernelNums',help='if type single is added this kernelNum is the index of the kernel to be plotted', default=16000)
+    parser.add_argument('--kernelNums',help='if type single is added this kernelNum is the index of the kernel to be plotted', default='0')
     parser.add_argument('--filt',help='states which filter functions for freq peaks should be used when doing the "Stat" plot', default='narrowBand,band,cleanPeaks,dirtyPeaks')
     parser.add_argument('--multi',help='gives the filtersize that are used for the multiple first layers', default=None)
     parser.add_argument('--strds',help='gives the filtersize that are used for the multiple first layers', default=None)
