@@ -503,6 +503,7 @@ class Plotter(object):
                     im.set_clim(colorInterval[0], colorInterval[1])
                 axs[dimInputIdx][epochRangeIdx].set_ylabel('Frequency [Hz]')
 #                axs[dimInputIdx][epochRangeIdx].set_ylabel(self.layer.domain + '_for_channel_' + str(dimInputIdx))
+                axs[dimInputIdx][epochRangeIdx].set_xlabel('Filter idx (sorted)')
 #                axs[dimInputIdx][epochRangeIdx].set_xlabel('filterIdx_' + mode + '_for epoch' + '_' + '%03d' % (self.epochRangeToPlot[epochRangeIdx],))
 
         fig.subplots_adjust(hspace=0)
@@ -514,7 +515,7 @@ class Plotter(object):
         
         numDomain = '_log_applied' if(self.layer.isPlottingDomainLog and self.layer.domain == 'freq') else ''
 
-        plt.suptitle(self.title + '_' + self.layer.domain + '_for_epoch_' + '_'.join(str(x) for x in self.epochRangeToPlot) + numDomain + analyticalSignalExtension, fontsize=self.titleFontSize, y=self.titleYPosition)
+#        plt.suptitle(self.title + '_' + self.layer.domain + '_for_epoch_' + '_'.join(str(x) for x in self.epochRangeToPlot) + numDomain + analyticalSignalExtension, fontsize=self.titleFontSize, y=self.titleYPosition)
         plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_heat_map_' + self.layer.domain + '_' + mode + numDomain + '_filterLength=' + str(self.layer.filterSize) + analyticalSignalExtension)
 
     def setGraphXAxisLable(self, axs, axsRowIdx, axsColIdx, label):
