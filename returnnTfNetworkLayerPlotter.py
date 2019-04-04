@@ -417,14 +417,15 @@ class Plotter(object):
         kernelNums = self.plottingConfigs['kernelNums']
 
 #        fig, axs = plt.subplots(len(kernelNums), 1, figsize=self.plottingConfigs['figSize']True)
-        figprops = dict(figsize=self.plottingConfigs['figSize'], dpi=128)                                          # Figure properties
-        adjustprops = dict(left=0.1, bottom=0.1, right=0.97, top=0.93, wspace=0.2, hspace=0.2)
+#        figprops = dict(figsize=self.plottingConfigs['figSize'], dpi=128)                                          # Figure properties
+#        adjustprops = dict(left=0.1, bottom=0.1, right=0.97, top=0.93, wspace=0.2, hspace=0.2)
         axs = [ [None, None] for i in range(len(kernelNums)) ]
 
-        fig = pylab.figure(**figprops)                                                              # New figure
+#        fig = pylab.figure(**figprops)                                                              # New figure
+        fig = pylab.figure()                                                              # New figure
         plt.rcParams.update({'font.size': 22})
         plt.locator_params(axis='x', nbins=3)
-        fig.subplots_adjust(**adjustprops)
+#        fig.subplots_adjust(**adjustprops)
         numKernels = len(kernelNums)
 
         for kernelIdx in range(numKernels):
