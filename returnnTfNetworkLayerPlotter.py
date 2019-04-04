@@ -422,6 +422,8 @@ class Plotter(object):
         axs = [ [None, None] for i in range(len(kernelNums)) ]
 
         fig = pylab.figure(**figprops)                                                              # New figure
+        plt.rcParams.update({'font.size': 22})
+        plt.locator_params(axis='x', nbins=3)
         fig.subplots_adjust(**adjustprops)
         numKernels = len(kernelNums)
 
