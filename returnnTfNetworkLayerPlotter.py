@@ -442,7 +442,7 @@ class Plotter(object):
 #                    axs[kernelIdx][domainIdx].set(xlabel='[' + self.layer.domain + ']')
                 axs[kernelIdx][domainIdx].grid()
         figId = 'Figure_' + str(self.layer.filterSize) + '_singleFilter'
-        fig.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + figId)
+        plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + figId)
 
 
     def plot1DSimpleWeightsAll(self):
