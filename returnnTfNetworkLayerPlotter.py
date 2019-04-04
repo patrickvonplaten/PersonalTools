@@ -429,7 +429,7 @@ class Plotter(object):
 
         for kernelIdx in range(numKernels):
             kernelNum = int(kernelNums[kernelIdx])
-            for domainIdx,domain in enumerate(['time','freq']):
+            for domainIdx,domain in enumerate(['time']):
                 self.layer.setDomain(domain)
                 plotableWeight, timeArray = self.layer.getSinglePlotable1DWeightLastEpoch(kernelNum)
                 if(kernelIdx > 0):
