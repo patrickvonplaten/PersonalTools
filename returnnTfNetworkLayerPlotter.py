@@ -438,8 +438,8 @@ class Plotter(object):
                 else:
                     axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,1,1*kernelIdx + 1 + domainIdx)
                 axs[kernelIdx][domainIdx].plot(timeArray, plotableWeight)
-                if(kernelIdx == numKernels - 1):
-                    axs[kernelIdx][domainIdx].set(xlabel='[' + self.layer.domain + ']')
+#                if(kernelIdx == numKernels - 1):
+#                    axs[kernelIdx][domainIdx].set(xlabel='[' + self.layer.domain + ']')
                 axs[kernelIdx][domainIdx].grid()
         figId = 'Figure_' + str(self.layer.filterSize) + '_singleFilter'
         fig.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + figId)
