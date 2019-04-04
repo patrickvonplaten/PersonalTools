@@ -475,12 +475,17 @@ class Plotter(object):
         axs[axsRowIdx][axsColIdx].grid(b=True)
         return axs
 
+
     def plot2DHeatWeights(self, mode):
         assert mode in ['sorted','unsorted'], "mode has to be sorted or unsorted"
+
+        def format_func(value, tick_number):
+            return r"{}".format(int(np.ceil(value/1000)))
         
         fig, axs = plt.subplots(self.layer.dimInput, len(self.epochRangeToPlot), figsize=self.figSize, sharex=True, sharey=True)
         doAnalytical = self.plottingConfigs['analytical']
         analyticalSignalExtension='_analytical_signal' if doAnalytical else ''
+        plt.rcParams.update({'font.size': 10})
 
         if(self.layer.dimInput == 1 and not isinstance(axs, np.ndarray)):
             axs = [[axs]]
@@ -494,14 +499,15 @@ class Plotter(object):
             mode = 'sorted_by_channel_' + str(self.layer.channelUsedForPermutation)
         elif(mode == 'unsorted'):
             plotableWeights = self.layer.getPlotable2DWeights(doAnalytical)
-
+        plt.locator_params(axis='y', nbins=4)
         for epochRangeIdx, plotableWeightPerEpoch in enumerate(plotableWeights):
             for dimInputIdx, plotableWeightPerDim in enumerate(plotableWeightPerEpoch): 
                 im = axs[dimInputIdx][epochRangeIdx].imshow(plotableWeightPerDim, origin='lower', aspect='auto', cmap=self.plottingConfigs['cmap'])
                 colorInterval = self.plottingConfigs['colorInterval']
                 if(colorInterval):
                     im.set_clim(colorInterval[0], colorInterval[1])
-                axs[dimInputIdx][epochRangeIdx].set_ylabel('Frequency [Hz]')
+                axs[dimInputIdx][epochRangeIdx].yaxis.set_major_formatter(plt.FuncFormatter(format_func))
+                axs[dimInputIdx][epochRangeIdx].set_ylabel('Frequency [kHz]')
 #                axs[dimInputIdx][epochRangeIdx].set_ylabel(self.layer.domain + '_for_channel_' + str(dimInputIdx))
                 axs[dimInputIdx][epochRangeIdx].set_xlabel('Filter index (sorted)')
 #                axs[dimInputIdx][epochRangeIdx].set_xlabel('filterIdx_' + mode + '_for epoch' + '_' + '%03d' % (self.epochRangeToPlot[epochRangeIdx],))
