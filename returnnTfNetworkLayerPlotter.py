@@ -485,7 +485,7 @@ class Plotter(object):
         fig, axs = plt.subplots(self.layer.dimInput, len(self.epochRangeToPlot), figsize=self.figSize, sharex=True, sharey=True)
         doAnalytical = self.plottingConfigs['analytical']
         analyticalSignalExtension='_analytical_signal' if doAnalytical else ''
-        plt.rcParams.update({'font.size': 10})
+        plt.rcParams.update({'font.size': 20})
 
         if(self.layer.dimInput == 1 and not isinstance(axs, np.ndarray)):
             axs = [[axs]]
