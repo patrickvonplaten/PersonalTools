@@ -422,7 +422,7 @@ class Plotter(object):
         axs = [ [None, None] for i in range(len(kernelNums)) ]
 
 #        fig = pylab.figure(**figprops)                                                              # New figure
-        fig = pylab.figure()                                                              # New figure
+        fig = pylab.figure(figsize=self.plottingConfigs['figSize'])  
         plt.rcParams.update({'font.size': 22})
         plt.locator_params(axis='x', nbins=3)
 #        fig.subplots_adjust(**adjustprops)
