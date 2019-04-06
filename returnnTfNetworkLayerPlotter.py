@@ -440,7 +440,7 @@ class Plotter(object):
                 axs[kernelIdx][domainIdx].plot(timeArray, plotableWeight)
 #                if(kernelIdx == numKernels - 1):
 #                    axs[kernelIdx][domainIdx].set(xlabel='[' + self.layer.domain + ']')
-                axs[kernelIdx][domainIdx].grid()
+#                axs[kernelIdx][domainIdx].grid()
         figId = 'Figure_' + str(self.layer.filterSize) + '_singleFilter'
         plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + figId)
 
