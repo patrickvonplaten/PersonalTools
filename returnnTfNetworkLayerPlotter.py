@@ -450,7 +450,7 @@ class Plotter(object):
         analyticalSignalExtension='_analytical_signal' if doAnalytical else ''
         plotableWeights, timeArray = self.layer.getPlotable1DWeights(doAnalytical)
         numFilters = plotableWeights[0].shape[0]
-        plt.rcParams.update({'font.size': 10})
+        plt.rcParams.update({'font.size':10})
         if(not self.samplesPerColumn):
             self.samplesPerColumn = int(np.ceil(numFilters/float(self.samplesPerRow)))
 
@@ -487,7 +487,7 @@ class Plotter(object):
         fig, axs = plt.subplots(self.layer.dimInput, len(self.epochRangeToPlot), figsize=self.figSize, sharex=True, sharey=True)
         doAnalytical = self.plottingConfigs['analytical']
         analyticalSignalExtension='_analytical_signal' if doAnalytical else ''
-        plt.rcParams.update({'font.size': 30})
+        plt.rcParams.update({'font.size': 50})
 
         if(self.layer.dimInput == 1 and not isinstance(axs, np.ndarray)):
             axs = [[axs]]
