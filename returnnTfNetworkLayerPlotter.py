@@ -420,7 +420,6 @@ class Plotter(object):
 
         fig = pylab.figure(figsize=self.plottingConfigs['figSize'])  
         plt.rcParams.update({'font.size': 15})
-        plt.locator_params(axis='y', nbins=3)
         numKernels = len(kernelNums)
 
         for kernelIdx in range(numKernels):
@@ -435,6 +434,8 @@ class Plotter(object):
                 else:
                     axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,lenDomainsToPlot,lenDomainsToPlot*kernelIdx + 1 + domainIdx)
                 axs[kernelIdx][domainIdx].plot(timeArray, plotableWeight)
+                axs[kernelIdx][domainIdx].xaxis.set_major_locator(plt.MaxNLocator(3))
+                axs[kernelIdx][domainIdx].yaxis.set_major_locator(plt.MaxNLocator(3))
                 if(kernelIdx == numKernels - 1):
                     axs[kernelIdx][domainIdx].set(xlabel='[' + self.layer.domain + ']')
                 axs[kernelIdx][domainIdx].grid()
