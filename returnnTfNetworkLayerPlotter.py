@@ -430,7 +430,8 @@ class Plotter(object):
                 self.layer.setDomain(domain)
                 plotableWeight, timeArray = self.layer.getSinglePlotable1DWeightLastEpoch(kernelNum)
                 if(kernelIdx > 0):
-                    axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,lenDomainsToPlot,lenDomainsToPlot*kernelIdx + 1 + domainIdx, sharey=axs[0][domainIdx])
+#                    axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,lenDomainsToPlot,lenDomainsToPlot*kernelIdx + 1 + domainIdx, sharey=axs[0][domainIdx])
+                    axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,lenDomainsToPlot,lenDomainsToPlot*kernelIdx + 1 + domainIdx)
                 else:
                     axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,lenDomainsToPlot,lenDomainsToPlot*kernelIdx + 1 + domainIdx)
                 axs[kernelIdx][domainIdx].plot(timeArray, plotableWeight)
