@@ -437,12 +437,11 @@ class Plotter(object):
                 axs[kernelIdx][domainIdx].plot(timeArray, plotableWeight)
                 axs[kernelIdx][domainIdx].yaxis.set_major_locator(plt.MaxNLocator(3))
                 axs[kernelIdx][domainIdx].xaxis.set_major_locator(plt.MaxNLocator(6))
-                if(kernelIdx == numKernels - 1):
-                    axs[kernelIdx][domainIdx].set(xlabel='[' + self.layer.domain + ']')
-                else:
-                    axs[kernelIdx][domainIdx].set_xticks([])
-
-#                axs[kernelIdx][domainIdx].grid()
+                axs[kernelIdx][domainIdx].set(xlabel='[' + self.layer.domain + ']')
+#                if(kernelIdx == numKernels - 1):
+#                else:
+#                    axs[kernelIdx][domainIdx].set_xticks([])
+                axs[kernelIdx][domainIdx].grid()
         figId = 'Figure_' + str(self.layer.filterSize) + '_singleFilter'
         plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + figId)
 
