@@ -510,7 +510,7 @@ class Plotter(object):
                 axs[dimInputIdx][epochRangeIdx].yaxis.set_major_formatter(plt.FuncFormatter(format_func))
                 axs[dimInputIdx][epochRangeIdx].set_ylabel('Frequency [kHz]')
 #                axs[dimInputIdx][epochRangeIdx].set_ylabel(self.layer.domain + '_for_channel_' + str(dimInputIdx))
-#                axs[dimInputIdx][epochRangeIdx].set_xlabel('Filter index (sorted)')
+                axs[dimInputIdx][epochRangeIdx].set_xlabel('Filter index (sorted)')
 #                axs[dimInputIdx][epochRangeIdx].set_xlabel('filterIdx_' + mode + '_for epoch' + '_' + '%03d' % (self.epochRangeToPlot[epochRangeIdx],))
 
         fig.subplots_adjust(hspace=0)
