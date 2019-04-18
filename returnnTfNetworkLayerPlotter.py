@@ -416,31 +416,29 @@ class Plotter(object):
         assert 'samplesPerRow' in self.plottingConfigs, 'Needs to give the attribute samplesPerRow'
         kernelNums = self.plottingConfigs['kernelNums']
 
-#        fig, axs = plt.subplots(len(kernelNums), 1, figsize=self.plottingConfigs['figSize']True)
-#        figprops = dict(figsize=self.plottingConfigs['figSize'], dpi=128)                                          # Figure properties
-#        adjustprops = dict(left=0.1, bottom=0.1, right=0.97, top=0.93, wspace=0.2, hspace=0.2)
         axs = [ [None, None] for i in range(len(kernelNums)) ]
 
-#        fig = pylab.figure(**figprops)                                                              # New figure
         fig = pylab.figure(figsize=self.plottingConfigs['figSize'])  
         plt.rcParams.update({'font.size': 30})
         plt.locator_params(axis='x', nbins=3)
-#        fig.subplots_adjust(**adjustprops)
         numKernels = len(kernelNums)
 
         for kernelIdx in range(numKernels):
             kernelNum = int(kernelNums[kernelIdx])
-            for domainIdx,domain in enumerate(['time']):
+            domainsToPlot = ['time','freq']
+            lenDomainsToPlot = len(domainsToPlot)
+            for domainIdx,domain in enumerate(domainsToPlot):
+
                 self.layer.setDomain(domain)
                 plotableWeight, timeArray = self.layer.getSinglePlotable1DWeightLastEpoch(kernelNum)
                 if(kernelIdx > 0):
-                    axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,1,1*kernelIdx + 1 + domainIdx, sharey=axs[0][domainIdx])
+                    axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,lenDomainsToPlot,lenDomainsToPlot*kernelIdx + 1 + domainIdx, sharey=axs[0][domainIdx])
                 else:
-                    axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,1,1*kernelIdx + 1 + domainIdx)
+                    axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,lenDomainsToPlot,lenDomainsToPlot*kernelIdx + 1 + domainIdx)
                 axs[kernelIdx][domainIdx].plot(timeArray, plotableWeight)
-#                if(kernelIdx == numKernels - 1):
-#                    axs[kernelIdx][domainIdx].set(xlabel='[' + self.layer.domain + ']')
-#                axs[kernelIdx][domainIdx].grid()
+                if(kernelIdx == numKernels - 1):
+                    axs[kernelIdx][domainIdx].set(xlabel='[' + self.layer.domain + ']')
+                axs[kernelIdx][domainIdx].grid()
         figId = 'Figure_' + str(self.layer.filterSize) + '_singleFilter'
         plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + figId)
 
