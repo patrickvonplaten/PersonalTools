@@ -420,7 +420,7 @@ class Plotter(object):
 
         fig = pylab.figure(figsize=self.plottingConfigs['figSize'])  
 #        plt.rcParams.update({'font.size': 20})
-#        plt.locator_params(axis='x', nbins=3)
+        plt.locator_params(axis='y', nbins=4)
         numKernels = len(kernelNums)
 
         for kernelIdx in range(numKernels):
