@@ -450,6 +450,7 @@ class Plotter(object):
         analyticalSignalExtension='_analytical_signal' if doAnalytical else ''
         plotableWeights, timeArray = self.layer.getPlotable1DWeights(doAnalytical)
         numFilters = plotableWeights[0].shape[0]
+        plt.rcParams.update({'font.size': 10})
         if(not self.samplesPerColumn):
             self.samplesPerColumn = int(np.ceil(numFilters/float(self.samplesPerRow)))
 
