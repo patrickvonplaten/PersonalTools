@@ -484,7 +484,7 @@ class Plotter(object):
         def format_func(value, tick_number):
             return r"{}".format(int(np.ceil(value/1000)))
         
-        plt.rcParams.update({'font.size': 30})
+        plt.rcParams.update({'font.size': 50})
         fig, axs = plt.subplots(self.layer.dimInput, len(self.epochRangeToPlot), figsize=self.figSize, sharex=True, sharey=True)
         doAnalytical = self.plottingConfigs['analytical']
         analyticalSignalExtension='_analytical_signal' if doAnalytical else ''
@@ -523,7 +523,7 @@ class Plotter(object):
         
         numDomain = '_log_applied' if(self.layer.isPlottingDomainLog and self.layer.domain == 'freq') else ''
 
-#        plt.suptitle(self.title + '_' + self.layer.domain + '_for_epoch_' + '_'.join(str(x) for x in self.epochRangeToPlot) + numDomain + analyticalSignalExtension, fontsize=self.titleFontSize, y=self.titleYPosition)
+        plt.suptitle('Kernel size = ' + str(self.layer.filterSize), y=self.titleYPosition)
         plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_heat_map_' + self.layer.domain + '_' + mode + numDomain + '_filterLength=' + str(self.layer.filterSize) + analyticalSignalExtension)
 
     def setGraphXAxisLable(self, axs, axsRowIdx, axsColIdx, label):
