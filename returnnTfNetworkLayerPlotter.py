@@ -428,7 +428,6 @@ class Plotter(object):
             domainsToPlot = ['time','freq']
             lenDomainsToPlot = len(domainsToPlot)
             for domainIdx,domain in enumerate(domainsToPlot):
-
                 self.layer.setDomain(domain)
                 plotableWeight, timeArray = self.layer.getSinglePlotable1DWeightLastEpoch(kernelNum)
                 if(kernelIdx > 0):
