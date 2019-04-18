@@ -419,7 +419,7 @@ class Plotter(object):
         axs = [ [None, None] for i in range(len(kernelNums)) ]
 
         fig = pylab.figure(figsize=self.plottingConfigs['figSize'])  
-        plt.rcParams.update({'font.size': 18})
+        plt.rcParams.update({'font.size': 22})
         numKernels = len(kernelNums)
 
         for kernelIdx in range(numKernels):
@@ -436,7 +436,7 @@ class Plotter(object):
                     axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,lenDomainsToPlot,lenDomainsToPlot*kernelIdx + 1 + domainIdx)
                 axs[kernelIdx][domainIdx].plot(timeArray, plotableWeight)
                 axs[kernelIdx][domainIdx].yaxis.set_major_locator(plt.MaxNLocator(3))
-                axs[kernelIdx][domainIdx].xaxis.set_major_locator(plt.MaxNLocator(6))
+                axs[kernelIdx][domainIdx].xaxis.set_major_locator(plt.MaxNLocator(5))
                 axs[kernelIdx][domainIdx].set(xlabel='[' + self.layer.domain + ']')
 #                if(kernelIdx == numKernels - 1):
 #                else:
