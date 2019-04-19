@@ -430,14 +430,14 @@ class Plotter(object):
                 self.layer.setDomain(domain)
                 plotableWeight, timeArray = self.layer.getSinglePlotable1DWeightLastEpoch(kernelNum)
                 if(kernelIdx > 0):
-#                    axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,lenDomainsToPlot,lenDomainsToPlot*kernelIdx + 1 + domainIdx, sharey=axs[0][domainIdx])
-                    axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,lenDomainsToPlot,lenDomainsToPlot*kernelIdx + 1 + domainIdx)
+                    axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,lenDomainsToPlot,lenDomainsToPlot*kernelIdx + 1 + domainIdx, sharey=axs[0][domainIdx])
+#                    axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,lenDomainsToPlot,lenDomainsToPlot*kernelIdx + 1 + domainIdx)
                 else:
                     axs[kernelIdx][domainIdx] = fig.add_subplot(numKernels,lenDomainsToPlot,lenDomainsToPlot*kernelIdx + 1 + domainIdx)
                 axs[kernelIdx][domainIdx].plot(timeArray, plotableWeight)
                 axs[kernelIdx][domainIdx].yaxis.set_major_locator(plt.MaxNLocator(3))
                 axs[kernelIdx][domainIdx].xaxis.set_major_locator(plt.MaxNLocator(5))
-                axs[kernelIdx][domainIdx].set(xlabel='[' + self.layer.domain + ']')
+#                axs[kernelIdx][domainIdx].set(xlabel='[' + self.layer.domain + ']')
 #                if(kernelIdx == numKernels - 1):
 #                else:
 #                    axs[kernelIdx][domainIdx].set_xticks([])
