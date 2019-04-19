@@ -526,7 +526,7 @@ class Plotter(object):
         
         numDomain = '_log_applied' if(self.layer.isPlottingDomainLog and self.layer.domain == 'freq') else ''
 
-        plt.suptitle('Kernel size = ' + str(self.layer.filterSize), y=self.titleYPosition)
+#        plt.suptitle('Kernel size = ' + str(self.layer.filterSize), y=self.titleYPosition)
         plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_heat_map_' + self.layer.domain + '_' + mode + numDomain + '_filterLength=' + str(self.layer.filterSize) + analyticalSignalExtension)
 
     def setGraphXAxisLable(self, axs, axsRowIdx, axsColIdx, label):
