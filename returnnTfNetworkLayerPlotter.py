@@ -519,7 +519,7 @@ class Plotter(object):
             mode = 'sorted_by_channel_' + str(self.layer.channelUsedForPermutation)
         elif(mode == 'unsorted'):
             plotableWeights = self.layer.getPlotable2DWeights(doAnalytical)
-        plt.locator_params(axis='y', nbins=3)
+        plt.locator_params(axis='y', nbins=4)
         for epochRangeIdx, plotableWeightPerEpoch in enumerate(plotableWeights):
             for dimInputIdx, plotableWeightPerDim in enumerate(plotableWeightPerEpoch): 
                 im = axs[dimInputIdx][epochRangeIdx].imshow(plotableWeightPerDim, origin='lower', aspect='auto', cmap=self.plottingConfigs['cmap'])
@@ -543,6 +543,7 @@ class Plotter(object):
 
 #        plt.suptitle('Kernel size = ' + str(self.layer.filterSize), y=self.titleYPosition)
         plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_heat_map_' + self.layer.domain + '_' + mode + numDomain + '_filterLength=' + str(self.layer.filterSize) + analyticalSignalExtension)
+        plt.tight_layout()
 
     def setGraphXAxisLable(self, axs, axsRowIdx, axsColIdx, label):
         axs[axsRowIdx][axsColIdx].set_xlabel(label) 
