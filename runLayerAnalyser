@@ -48,6 +48,7 @@ if __name__ == "__main__":
     parser.add_argument('-rev', action='store_true', default=False, help='If "-rev" is added then weights array will be flippend for every kernel') 
     parser.add_argument('-log', action='store_true', default=False, help='If "-log" is added then plots of conv layer will be plotted in log scale') 
     parser.add_argument('-pad', action='store_true', default=False, help='If "-pad" is added then fourier transform is done on zero padded array so that it fits with the sampling rate') 
+    parser.add_argument('-sortI', action='store_true', default=False, help='If "-sortI" is added then each channel is sorted by himself for multi-channel') 
     parser.add_argument('-anal', action='store_true', default=False, help='If "-anal" is added then the analytical signal is plotted')
 
     args = vars(parser.parse_args())
@@ -90,6 +91,7 @@ if __name__ == "__main__":
         'dimInput': args['dim'],
         'colorInterval': args['colI'],
         'kernelNums': args['kernelNums'],
+        'sortAllIndividual': args['sortI']
     }
 
     bashCommand = "pwd"

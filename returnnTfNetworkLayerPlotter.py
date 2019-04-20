@@ -46,6 +46,7 @@ class ReturnnLayerPlotter(object):
         wishedPlottings = self.plottingConfigs['typeOfPlotting']
         isPlottingDomainLog = self.plottingConfigs['log']
         doPaddedFourierTransform = self.plottingConfigs['pad']
+        sortAllIndividual = self.plottingConfigs['sortAllIndividual']
         sampleRate = self.plottingConfigs['sampleRate']
         stride = int(self.plottingConfigs['stride']) if self.plottingConfigs['stride'] else 1
         doAnalytical = self.plottingConfigs['analytical']
@@ -53,7 +54,7 @@ class ReturnnLayerPlotter(object):
             return FeedForwardLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate)
         elif(isLayerWeightComposedOf2Subarrays):
             if(self.layerType == 'conv'):
-                return Conv1DLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate, dimInput, stride, doAnalytical) 
+                return Conv1DLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate, dimInput, stride, doAnalytical, sortAllIndividual) 
             elif(self.layerType == 'feed'):
                 return FeedForwardLayer(self.weights, self.nameOfLayer, self.nameOfLayerPath, wishedPlottings, isPlottingDomainLog, dimInput)
 
@@ -110,7 +111,8 @@ class Layer(object):
 
 class ProcessedWeights(object):
 
-    def __init__(self, weights, filterSize, isPlottingDomainLog, dimInput, doPaddedFourierTransform, sampleRate, stride, doAnalytical, timeFreqRatio=2): 
+    def __init__(self, weights, filterSize, isPlottingDomainLog, dimInput, doPaddedFourierTransform, sampleRate, stride, doAnalytical, sortAllIndividual=False, timeFreqRatio=2): 
+        self.sortAllIndividual = sortAllIndividual
         self.dimInput = dimInput
         self.filterSize = int(np.ceil(filterSize / stride))
         self.timeFreqRatio = timeFreqRatio
@@ -238,8 +240,7 @@ class ProcessedWeights(object):
         return x
 
     def sortFreq(self, x):
-        sortAllIndividual = True
-        if(sortAllIndividual):
+        if(self.sortAllIndividual):
             permutation = x.argmax(axis=1).argsort()
         else:
             permutation = self.permutation
@@ -311,14 +312,14 @@ class FeedForwardLayer(Layer):
 
 class Conv1DLayer(Layer):
 
-    def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate, dimInput, stride, doAnalytical):
+    def __init__(self, weights, name, namePath, wishedPlottings, isPlottingDomainLog, doPaddedFourierTransform, sampleRate, dimInput, stride, doAnalytical, sortAllIndividual):
         super(Conv1DLayer, self).__init__(weights, name, namePath, isPlottingDomainLog, sampleRate, dimInput)
         self.numFilters = self.shape[0]
         assert weights[0].shape[0] == self.numFilters, "dim not correct"
         self.addToAllowedPlottings(['1DWeightsSimpleAll','2DFilterStats','2DWeightsHeat','1DSingleKernel'])
         self.setLayerType(type(self).__name__)
         self.createPlottingsToDo(wishedPlottings)
-        self.processedWeights = ProcessedWeights(self.weights, self.filterSize, isPlottingDomainLog, self.dimInput, doPaddedFourierTransform, sampleRate, stride, doAnalytical)
+        self.processedWeights = ProcessedWeights(self.weights, self.filterSize, isPlottingDomainLog, self.dimInput, doPaddedFourierTransform, sampleRate, stride, doAnalytical, sortAllIndividual=sortAllIndividual)
         self.peaks = Peaks(self.processedWeights.plotableWeightsFreq)
         self.channelUsedForPermutation = 0 
 
@@ -501,7 +502,7 @@ class Plotter(object):
         def format_func(value, tick_number):
             return r"{}".format(int(np.ceil(value/1000)))
         
-        plt.rcParams.update({'font.size': 50})
+        plt.rcParams.update({'font.size': 30})
         fig, axs = plt.subplots(self.layer.dimInput, len(self.epochRangeToPlot), figsize=self.figSize, sharex=True, sharey=True)
         doAnalytical = self.plottingConfigs['analytical']
         analyticalSignalExtension='_analytical_signal' if doAnalytical else ''
@@ -526,7 +527,7 @@ class Plotter(object):
                 if(colorInterval):
                     im.set_clim(colorInterval[0], colorInterval[1])
                 axs[dimInputIdx][epochRangeIdx].yaxis.set_major_formatter(plt.FuncFormatter(format_func))
-                axs[dimInputIdx][epochRangeIdx].set_ylabel('Frequency [kHz]')
+                axs[0][epochRangeIdx].set_ylabel('Frequency [kHz]')
 #                axs[dimInputIdx][epochRangeIdx].set_ylabel(self.layer.domain + '_for_channel_' + str(dimInputIdx))
                 axs[dimInputIdx][epochRangeIdx].set_xlabel('Filter index (sorted)')
 #                axs[dimInputIdx][epochRangeIdx].set_xlabel('filterIdx_' + mode + '_for epoch' + '_' + '%03d' % (self.epochRangeToPlot[epochRangeIdx],))
