@@ -532,9 +532,9 @@ class Plotter(object):
             axs[-1][epochRangeIdx].set_xlabel('Filter index (sorted)')
 #                axs[dimInputIdx][epochRangeIdx].set_xlabel('filterIdx_' + mode + '_for epoch' + '_' + '%03d' % (self.epochRangeToPlot[epochRangeIdx],))
 
-        fig.subplots_adjust(hspace=0.0125)
+        fig.subplots_adjust(hspace=0.05)
         fig.subplots_adjust(right=0.8)
-        plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
+#        plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
 
         cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
         fig.colorbar(im, cax=cbar_ax)
