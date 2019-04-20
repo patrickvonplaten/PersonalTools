@@ -238,9 +238,12 @@ class ProcessedWeights(object):
         return x
 
     def sortFreq(self, x):
-#        if(not isinstance(self.permutation,np.ndarray)):
-#            self.permutation = x.argmax(axis=1).argsort()
-        return x[self.permutation] 
+        sortAllIndividual = True
+        if(sortAllIndividual):
+            permutation = x.argmax(axis=1).argsort()
+        else:
+            permutation = self.permutation
+        return x[permutation] 
 
 class Peaks(object):
 
