@@ -89,7 +89,7 @@ if __name__ == "__main__":
         'filterFunctions': args['filt'],
         'dimInput': args['dim'],
         'colorInterval': args['colI'],
-        'kernelNums': args['kernelNums']
+        'kernelNums': args['kernelNums'],
     }
 
     bashCommand = "pwd"
@@ -144,7 +144,8 @@ if __name__ == "__main__":
     if(doSaveWeights or not doWeightExist):
         from returnnTfNetworkLayerSaver import LayerWeightSaver
         for layerName in layerNames:
-            lws = LayerWeightSaver(modelDir, pathToSaveWeightsDir, layerName, pathToInitWeight)
+            lws = LayerWeightSaver(modelDir, pathToSaveWeightsDir, 
+                    layerName, pathToInitWeight, channelNums=int(plottingConfigs['dimInput']))
         numEpochs = lws.numEpochs
     else:
         print("Weights already exist. If you want to delete old weights and save new weights, add '-rf' to the command.")

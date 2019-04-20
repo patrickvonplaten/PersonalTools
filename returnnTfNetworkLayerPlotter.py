@@ -34,19 +34,19 @@ class ReturnnLayerPlotter(object):
             epochWeight = np.load(os.path.join(self.pathToWeights, self.nameOfLayerPath + '_epoch' + str(i) + '_MMF.npy'))
             if(self.reverse):
                 epochWeight = np.flip(epochWeight, axis=1)
-            weights.append(np.squeeze(epochWeight))
+            weights.append(epochWeight)
         return weights
 
     def getLayer(self):
+        dimInput = int(self.plottingConfigs['dimInput'])
         lenWeightsTensor = len(self.weights[0].shape)
-        isLayerWeightComposedOf1Subarrays = lenWeightsTensor == 1
-        isLayerWeightComposedOf2Subarrays = lenWeightsTensor == 2
-        isLayerWeightComposedOf3Subarrays = lenWeightsTensor == 3
+        isLayerWeightComposedOf1Subarrays = lenWeightsTensor == 2
+        isLayerWeightComposedOf2Subarrays = lenWeightsTensor == 3
+        isLayerWeightComposedOf3Subarrays = lenWeightsTensor == 4
         wishedPlottings = self.plottingConfigs['typeOfPlotting']
         isPlottingDomainLog = self.plottingConfigs['log']
         doPaddedFourierTransform = self.plottingConfigs['pad']
         sampleRate = self.plottingConfigs['sampleRate']
-        dimInput = int(self.plottingConfigs['dimInput'])
         stride = int(self.plottingConfigs['stride']) if self.plottingConfigs['stride'] else 1
         doAnalytical = self.plottingConfigs['analytical']
         if(isLayerWeightComposedOf1Subarrays):
@@ -76,7 +76,7 @@ class Layer(object):
         self.dimInput = dimInput
         self.numEpochs = len(self.weights)
         self.shape = self.weights[0].shape
-        self.filterSize = int(self.shape[1]/self.dimInput)
+        self.filterSize = self.shape[1]
         self.allowedPlottings = []
         self.plottingsToDo = []
         self.layerType = None
@@ -112,7 +112,6 @@ class ProcessedWeights(object):
 
     def __init__(self, weights, filterSize, isPlottingDomainLog, dimInput, doPaddedFourierTransform, sampleRate, stride, doAnalytical, timeFreqRatio=2): 
         self.dimInput = dimInput
-        self.weights = weights[1::stride]
         self.filterSize = int(np.ceil(filterSize / stride))
         self.timeFreqRatio = timeFreqRatio
         self.permutation = None 
@@ -187,11 +186,10 @@ class ProcessedWeights(object):
         for i in range(numFilters): 
             for k in range(self.dimInput):
                 for j in range(self.filterSize):
-                    filterDimIdx = self.dimInput * j + k
                     if(not doAnalytical):
-                        weightsToAppend[i,j,k] = weights[i, filterDimIdx]
+                        weightsToAppend[i,j,k] = weights[i,j,k]
                     else:
-                        filterWeight[j] = weights[i, filterDimIdx]
+                        filterWeight[j] = weights[i,j,k]
                 if(doAnalytical):
                     weightsToAppend[i,:,k] = np.abs(hilbert(filterWeight))
         return weightsToAppend
@@ -505,6 +503,7 @@ class Plotter(object):
         elif(mode == 'unsorted'):
             plotableWeights = self.layer.getPlotable2DWeights(doAnalytical)
         plt.locator_params(axis='y', nbins=4)
+        ipdb.set_trace()
         for epochRangeIdx, plotableWeightPerEpoch in enumerate(plotableWeights):
             for dimInputIdx, plotableWeightPerDim in enumerate(plotableWeightPerEpoch): 
                 im = axs[dimInputIdx][epochRangeIdx].imshow(plotableWeightPerDim, origin='lower', aspect='auto', cmap=self.plottingConfigs['cmap'])
