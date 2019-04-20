@@ -519,13 +519,13 @@ class Plotter(object):
             mode = 'sorted_by_channel_' + str(self.layer.channelUsedForPermutation)
         elif(mode == 'unsorted'):
             plotableWeights = self.layer.getPlotable2DWeights(doAnalytical)
-        plt.locator_params(axis='y', nbins=6)
         for epochRangeIdx, plotableWeightPerEpoch in enumerate(plotableWeights):
             for dimInputIdx, plotableWeightPerDim in enumerate(plotableWeightPerEpoch): 
                 im = axs[dimInputIdx][epochRangeIdx].imshow(plotableWeightPerDim, origin='lower', aspect='auto', cmap=self.plottingConfigs['cmap'])
                 colorInterval = self.plottingConfigs['colorInterval']
                 if(colorInterval):
                     im.set_clim(colorInterval[0], colorInterval[1])
+                axs[dimInputIdx][epochRangeIdx].yaxis.set_major_locator(plt.MaxNLocator(4))
                 axs[dimInputIdx][epochRangeIdx].yaxis.set_major_formatter(plt.FuncFormatter(format_func))
 #                axs[dimInputIdx][epochRangeIdx].set_ylabel('Frequency [kHz]')
 #                axs[dimInputIdx][epochRangeIdx].set_ylabel(self.layer.domain + '_for_channel_' + str(dimInputIdx))
