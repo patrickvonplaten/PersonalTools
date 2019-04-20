@@ -526,9 +526,9 @@ class Plotter(object):
                 colorInterval = self.plottingConfigs['colorInterval']
                 if(colorInterval):
                     im.set_clim(colorInterval[0], colorInterval[1])
+                axs[dimInputIdx][epochRangeIdx].tick_params(axis='y', bottom=False)
                 axs[dimInputIdx][epochRangeIdx].yaxis.set_major_formatter(plt.FuncFormatter(format_func))
-                axs[0][epochRangeIdx].set_ylabel('Freq [kHz]')
-                axs[0][epochRangeIdx].tick_params(axis='y', bottom=False)
+                axs[dimInputIdx][epochRangeIdx].set_ylabel('Freq [kHz]')
 #                axs[dimInputIdx][epochRangeIdx].set_ylabel(self.layer.domain + '_for_channel_' + str(dimInputIdx))
             axs[-1][epochRangeIdx].set_xlabel('Filter index (sorted)')
 #                axs[dimInputIdx][epochRangeIdx].set_xlabel('filterIdx_' + mode + '_for epoch' + '_' + '%03d' % (self.epochRangeToPlot[epochRangeIdx],))
