@@ -114,13 +114,14 @@ class ProcessedWeights(object):
         self.dimInput = dimInput
         self.filterSize = int(np.ceil(filterSize / stride))
         self.timeFreqRatio = timeFreqRatio
-        self.permutation = None 
         self.isPlottingDomainLog = isPlottingDomainLog
         self.doPaddedFourierTransform = doPaddedFourierTransform
         self.sampleRate = sampleRate
         self.timeAxisTime = np.arange(self.filterSize)
         self.timeAxisFreq = np.arange(int(self.filterSize/2)) if not doPaddedFourierTransform else np.arange(int(self.sampleRate/2))
         self.plotableWeights = self.create_plotable_weights(weights)
+        sortByDim = 0 if dimInput == 1 else 3
+        self.permutation = self.getPermutation(self.plotableWeights, sortByDim)
         self.plotableWeightsAmpMod = self.create_plotable_weights(weights, doAnalytical=True)
         self.plotableWeightsFreq, self.plotableWeightsFreqSorted = self.getFrequencyDomain()
         self.plotableWeightsFreqAmpMod, self.plotableWeightsFreqSortedAmpMod = self.getFrequencyDomain(doAnalytical=True)
@@ -204,18 +205,31 @@ class ProcessedWeights(object):
             plotableWeightsFreqSorted = [self.fourierTransform(x, self.sortFreq) for x in self.plotableWeights]
         return plotableWeightsFreq, plotableWeightsFreqSorted
 
+    def padWeightsEpoch(self, weightsEpoch):
+        shapePadded = (weightsEpoch.shape[0], self.sampleRate)
+        weightsEpochPadded = np.zeros(shapePadded)
+        weightsEpochPadded[:,:self.filterSize] = weightsEpoch
+        return weightsEpochPadded
+
+    def transformToFourier(self, weightsEpoch):
+        layerWeightsFreqTransposed = np.fft.fft(weightsEpoch).T
+        layerWeightsFreqTransposed = layerWeightsFreqTransposed[:int(len(layerWeightsFreqTransposed)/2)]
+        layerWeightsFreqTransposedAbsolute = np.absolute(layerWeightsFreqTransposed.T)
+        return layerWeightsFreqTransposedAbsolute
+
+    def getPermutation(self, weights, sortByDim):
+#        weightsEpoch = weights[sortByDim][-1]
+        weightsEpoch = weights[0][-1]
+        weightsEpoch = self.padWeightsEpoch(weightsEpoch)
+        layerWeightsFreqTransposedAbsolute = self.transformToFourier(weightsEpoch)
+        return layerWeightsFreqTransposedAbsolute.argmax(axis=1).argsort()
+
     def fourierTransform(self, plotableWeightsSingleDim, sortFn):
             l = []
             for weightsEpoch in plotableWeightsSingleDim:
                 if(self.doPaddedFourierTransform):
-                    shapePadded = (weightsEpoch.shape[0], self.sampleRate)
-                    weightsEpochPadded = np.zeros(shapePadded)
-                    weightsEpochPadded[:,:self.filterSize] = weightsEpoch
-                    weightsEpoch = weightsEpochPadded
-
-                layerWeightsFreqTransposed = np.fft.fft(weightsEpoch).T
-                layerWeightsFreqTransposed = layerWeightsFreqTransposed[:int(len(layerWeightsFreqTransposed)/2)]
-                layerWeightsFreqTransposedAbsolute = np.absolute(layerWeightsFreqTransposed.T)
+                    weightsEpoch = self.padWeightsEpoch(weightsEpoch)
+                layerWeightsFreqTransposedAbsolute = self.transformToFourier(weightsEpoch)
                 if(self.isPlottingDomainLog):
                     layerWeightsFreqTransposedAbsolute = np.log(layerWeightsFreqTransposedAbsolute)
                 l.append(sortFn(layerWeightsFreqTransposedAbsolute))
@@ -225,8 +239,8 @@ class ProcessedWeights(object):
         return x
 
     def sortFreq(self, x):
-        if(not isinstance(self.permutation,np.ndarray)):
-            self.permutation = x.argmax(axis=1).argsort()
+#        if(not isinstance(self.permutation,np.ndarray)):
+#            self.permutation = x.argmax(axis=1).argsort()
         return x[self.permutation] 
 
 class Peaks(object):
