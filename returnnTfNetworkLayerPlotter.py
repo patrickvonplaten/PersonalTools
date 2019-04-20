@@ -503,6 +503,7 @@ class Plotter(object):
             return r"{}".format(int(np.ceil(value/1000)))
         
         plt.rcParams.update({'font.size': 30})
+        plt.locator_params(axis='y', nbins=4)
         fig, axs = plt.subplots(self.layer.dimInput, len(self.epochRangeToPlot), figsize=self.figSize, sharex=True, sharey=True)
         doAnalytical = self.plottingConfigs['analytical']
         analyticalSignalExtension='_analytical_signal' if doAnalytical else ''
@@ -525,7 +526,7 @@ class Plotter(object):
                 colorInterval = self.plottingConfigs['colorInterval']
                 if(colorInterval):
                     im.set_clim(colorInterval[0], colorInterval[1])
-                axs[dimInputIdx][epochRangeIdx].yaxis.set_major_locator(plt.MaxNLocator(4))
+#                axs[dimInputIdx][epochRangeIdx].yaxis.set_major_locator(plt.MaxNLocator(4))
                 axs[dimInputIdx][epochRangeIdx].yaxis.set_major_formatter(plt.FuncFormatter(format_func))
 #                axs[dimInputIdx][epochRangeIdx].set_ylabel('Frequency [kHz]')
 #                axs[dimInputIdx][epochRangeIdx].set_ylabel(self.layer.domain + '_for_channel_' + str(dimInputIdx))
