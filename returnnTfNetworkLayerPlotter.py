@@ -519,7 +519,7 @@ class Plotter(object):
             mode = 'sorted_by_channel_' + str(self.layer.channelUsedForPermutation)
         elif(mode == 'unsorted'):
             plotableWeights = self.layer.getPlotable2DWeights(doAnalytical)
-        plt.locator_params(axis='y', nbins=4)
+        plt.locator_params(axis='y', nbins=6)
         for epochRangeIdx, plotableWeightPerEpoch in enumerate(plotableWeights):
             for dimInputIdx, plotableWeightPerDim in enumerate(plotableWeightPerEpoch): 
                 im = axs[dimInputIdx][epochRangeIdx].imshow(plotableWeightPerDim, origin='lower', aspect='auto', cmap=self.plottingConfigs['cmap'])
@@ -527,7 +527,7 @@ class Plotter(object):
                 if(colorInterval):
                     im.set_clim(colorInterval[0], colorInterval[1])
                 axs[dimInputIdx][epochRangeIdx].yaxis.set_major_formatter(plt.FuncFormatter(format_func))
-                axs[dimInputIdx][epochRangeIdx].set_ylabel('Freq [kHz]')
+#                axs[dimInputIdx][epochRangeIdx].set_ylabel('Frequency [kHz]')
 #                axs[dimInputIdx][epochRangeIdx].set_ylabel(self.layer.domain + '_for_channel_' + str(dimInputIdx))
             axs[-1][epochRangeIdx].set_xlabel('Filter index (sorted)')
 #                axs[dimInputIdx][epochRangeIdx].set_xlabel('filterIdx_' + mode + '_for epoch' + '_' + '%03d' % (self.epochRangeToPlot[epochRangeIdx],))
@@ -543,7 +543,7 @@ class Plotter(object):
 
 #        plt.suptitle('Kernel size = ' + str(self.layer.filterSize), y=self.titleYPosition)
         plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_heat_map_' + self.layer.domain + '_' + mode + numDomain + '_filterLength=' + str(self.layer.filterSize) + analyticalSignalExtension)
-        plt.tight_layout()
+#        plt.tight_layout()
 
     def setGraphXAxisLable(self, axs, axsRowIdx, axsColIdx, label):
         axs[axsRowIdx][axsColIdx].set_xlabel(label) 
