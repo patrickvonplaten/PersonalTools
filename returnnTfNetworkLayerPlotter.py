@@ -218,8 +218,7 @@ class ProcessedWeights(object):
         return layerWeightsFreqTransposedAbsolute
 
     def getPermutation(self, weights, sortByDim):
-#        weightsEpoch = weights[sortByDim][-1]
-        weightsEpoch = weights[0][-1]
+        weightsEpoch = weights[sortByDim][-1]
         weightsEpoch = self.padWeightsEpoch(weightsEpoch)
         layerWeightsFreqTransposedAbsolute = self.transformToFourier(weightsEpoch)
         return layerWeightsFreqTransposedAbsolute.argmax(axis=1).argsort()
@@ -517,7 +516,6 @@ class Plotter(object):
         elif(mode == 'unsorted'):
             plotableWeights = self.layer.getPlotable2DWeights(doAnalytical)
         plt.locator_params(axis='y', nbins=4)
-        ipdb.set_trace()
         for epochRangeIdx, plotableWeightPerEpoch in enumerate(plotableWeights):
             for dimInputIdx, plotableWeightPerDim in enumerate(plotableWeightPerEpoch): 
                 im = axs[dimInputIdx][epochRangeIdx].imshow(plotableWeightPerDim, origin='lower', aspect='auto', cmap=self.plottingConfigs['cmap'])
