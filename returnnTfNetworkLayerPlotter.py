@@ -502,7 +502,7 @@ class Plotter(object):
         def format_func(value, tick_number):
             return r"{}".format(int(np.ceil(value/1000)))
         
-        plt.rcParams.update({'font.size': 40})
+        plt.rcParams.update({'font.size': 50})
         fig, axs = plt.subplots(self.layer.dimInput, len(self.epochRangeToPlot), figsize=self.figSize, sharex=True, sharey=True)
         doAnalytical = self.plottingConfigs['analytical']
         analyticalSignalExtension='_analytical_signal' if doAnalytical else ''
