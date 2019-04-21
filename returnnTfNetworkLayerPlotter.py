@@ -502,7 +502,7 @@ class Plotter(object):
         def format_func(value, tick_number):
             return r"{}".format(int(np.ceil(value/1000)))
         
-        plt.rcParams.update({'font.size': 30})
+        plt.rcParams.update({'font.size': 26})
         fig, axs = plt.subplots(self.layer.dimInput, len(self.epochRangeToPlot), figsize=self.figSize, sharex=True, sharey=True)
         doAnalytical = self.plottingConfigs['analytical']
         analyticalSignalExtension='_analytical_signal' if doAnalytical else ''
@@ -528,9 +528,9 @@ class Plotter(object):
                     im.set_clim(colorInterval[0], colorInterval[1])
                 axs[dimInputIdx][epochRangeIdx].yaxis.set_major_locator(plt.MaxNLocator(5))
                 axs[dimInputIdx][epochRangeIdx].yaxis.set_major_formatter(plt.FuncFormatter(format_func))
-                axs[dimInputIdx][epochRangeIdx].set_ylabel('Freq [kHz] (ch. ' + channels[dimInputIdx])
+                axs[dimInputIdx][epochRangeIdx].set_ylabel('Freq [kHz] (ch.' + channels[dimInputIdx] + ')')
 #                axs[dimInputIdx][epochRangeIdx].set_ylabel(self.layer.domain + '_for_channel_' + str(dimInputIdx))
-            axs[-1][epochRangeIdx].set_xlabel('Filter index (sorted)')
+            axs[-1][epochRangeIdx].set_xlabel('Filter index (sorted by ch.5)')
 #                axs[dimInputIdx][epochRangeIdx].set_xlabel('filterIdx_' + mode + '_for epoch' + '_' + '%03d' % (self.epochRangeToPlot[epochRangeIdx],))
 
         fig.subplots_adjust(hspace=0.1)
