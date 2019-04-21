@@ -527,12 +527,13 @@ class Plotter(object):
                     im.set_clim(colorInterval[0], colorInterval[1])
 #                axs[dimInputIdx][epochRangeIdx].yaxis.set_major_locator(plt.MaxNLocator(4))
                 axs[dimInputIdx][epochRangeIdx].yaxis.set_major_formatter(plt.FuncFormatter(format_func))
-#                axs[dimInputIdx][epochRangeIdx].set_ylabel('Frequency [kHz]')
+                axs[dimInputIdx][epochRangeIdx].set_ylabel('Frequency [kHz]')
 #                axs[dimInputIdx][epochRangeIdx].set_ylabel(self.layer.domain + '_for_channel_' + str(dimInputIdx))
             axs[-1][epochRangeIdx].set_xlabel('Filter index (sorted)')
 #                axs[dimInputIdx][epochRangeIdx].set_xlabel('filterIdx_' + mode + '_for epoch' + '_' + '%03d' % (self.epochRangeToPlot[epochRangeIdx],))
 
-        fig.subplots_adjust(hspace=0.1)
+#        fig.subplots_adjust(hspace=0.1)
+        fig.subplots_adjust(hspace=0)
         fig.subplots_adjust(right=0.8)
 #        plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
 
