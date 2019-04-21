@@ -503,7 +503,7 @@ class Plotter(object):
             return r"{}".format(int(np.ceil(value/1000)))
         
         plt.rcParams.update({'font.size': 30})
-        plt.locator_params(axis='y', nbins=4)
+        plt.locator_params(axis='y', numticks=4)
         fig, axs = plt.subplots(self.layer.dimInput, len(self.epochRangeToPlot), figsize=self.figSize, sharex=True, sharey=True)
         doAnalytical = self.plottingConfigs['analytical']
         analyticalSignalExtension='_analytical_signal' if doAnalytical else ''
