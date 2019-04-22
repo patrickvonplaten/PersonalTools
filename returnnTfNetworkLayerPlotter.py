@@ -530,10 +530,13 @@ class Plotter(object):
                 axs[dimInputIdx][epochRangeIdx].yaxis.set_major_formatter(plt.FuncFormatter(format_func))
                 axs[dimInputIdx][epochRangeIdx].set_ylabel('Freq [kHz] (ch.' + channels[dimInputIdx] + ')')
 #                axs[dimInputIdx][epochRangeIdx].set_ylabel(self.layer.domain + '_for_channel_' + str(dimInputIdx))
+            saveExt = ''
             if(self.plottingConfigs['sortAllIndividual']):
                 axs[-1][epochRangeIdx].set_xlabel('Filter index (chs. sorted sep.)')
+                saveExt += '_sortedSep'
             else:
                 axs[-1][epochRangeIdx].set_xlabel('Filter index (sorted by ch.5)')
+                saveExt += '_sortedBy5'
 #                axs[dimInputIdx][epochRangeIdx].set_xlabel('filterIdx_' + mode + '_for epoch' + '_' + '%03d' % (self.epochRangeToPlot[epochRangeIdx],))
 
         fig.subplots_adjust(hspace=0.1)
@@ -547,7 +550,7 @@ class Plotter(object):
         numDomain = '_log_applied' if(self.layer.isPlottingDomainLog and self.layer.domain == 'freq') else ''
 
 #        plt.suptitle('Kernel size = ' + str(self.layer.filterSize), y=self.titleYPosition)
-        plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_heat_map_' + self.layer.domain + '_' + mode + numDomain + '_filterLength=' + str(self.layer.filterSize) + analyticalSignalExtension)
+        plt.savefig(self.pathToAnalysisDir + '/' + self.layer.namePath + '_heat_map_' + self.layer.domain + '_' + mode + numDomain + '_filterLength=' + str(self.layer.filterSize) + analyticalSignalExtension + saveExt)
 #        plt.tight_layout()
 
     def setGraphXAxisLable(self, axs, axsRowIdx, axsColIdx, label):
