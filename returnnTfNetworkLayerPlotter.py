@@ -525,7 +525,7 @@ class Plotter(object):
                 im = axs[dimInputIdx][epochRangeIdx].imshow(plotableWeightPerDim, origin='lower', aspect='auto', cmap=self.plottingConfigs['cmap'])
                 colorInterval = self.plottingConfigs['colorInterval']
                 if(colorInterval):
-                    im.set_clim(colorInterval[0], colorInterval[1])
+                    im.set_clim(int(colorInterval[0]), int(colorInterval[1]))
                 axs[dimInputIdx][epochRangeIdx].yaxis.set_major_locator(plt.MaxNLocator(5))
                 axs[dimInputIdx][epochRangeIdx].yaxis.set_major_formatter(plt.FuncFormatter(format_func))
                 axs[dimInputIdx][epochRangeIdx].set_ylabel('Freq [kHz] (ch.' + channels[dimInputIdx] + ')')
